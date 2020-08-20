@@ -4,6 +4,9 @@ project(mecab)
 cmake_host_system_information(RESULT _os QUERY OS_NAME)
 cmake_host_system_information(RESULT _platform QUERY OS_PLATFORM)
 	
+include ( CheckIncludeFiles )
+check_include_files ( iconv.h HAVE_ICONV )
+
 add_library(libmecab STATIC
 	src/feature_index.cpp
 	src/param.cpp
@@ -29,15 +32,17 @@ add_library(libmecab STATIC
 	src/libmecab.cpp)
 	
 add_definitions( -DMECAB_STATIC
-					 -D_CRT_SECURE_NO_DEPRECATE
 					 -DMECAB_USE_THREAD 
 					 -DHAVE_GETENV 
-					 -DHAVE_WINDOWS_H 
 					 -D_UNICODE
 					 -DDIC_VERSION=102
 					 -DVERSION="0.996"
 					 -DPACKAGE="mecab"
-					 -DMECAB_DEFAULT_RC="c:/mecab/etc/mecabrc")
+					 -DMECAB_DEFAULT_RC="")
+if(MSVC)
+add_definitions (-D_CRT_SECURE_NO_DEPRECATE -DHAVE_WINDOWS_H )
+endif()
+
 target_include_directories(libmecab PRIVATE ./src ./)
 
 add_executable (mecab src/mecab.cpp)
