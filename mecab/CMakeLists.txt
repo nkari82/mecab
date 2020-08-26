@@ -4,11 +4,66 @@ project(mecab)
 cmake_host_system_information(RESULT _os QUERY OS_NAME)
 cmake_host_system_information(RESULT _platform QUERY OS_PLATFORM)
 	
-include ( CheckIncludeFiles )
-check_include_files ( iconv.h HAVE_ICONV )
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/config.h.cmake ${CMAKE_CURRENT_SOURCE_DIR}/src/config.h)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-add_library(libmecab STATIC
-	src/feature_index.cpp
+include ( CheckIncludeFiles )
+check_include_files ( ctype.h HAVE_CTYPE_H )
+check_include_files ( dirent.h HAVE_DIRENT_H )
+check_include_files ( dlfcn.h HAVE_DLFCN_H )
+check_include_files ( fcntl.h HAVE_FCNTL_H )
+check_include_files ( iconv.h HAVE_ICONV )
+check_include_files ( inttypes.h HAVE_INTTYPES_H )
+check_include_files ( io.h HAVE_IO_H )
+check_include_files ( memory.h HAVE_MEMORY_H )
+check_include_files ( pthread.h HAVE_PTHREAD_H )
+check_include_files ( stdint.h HAVE_STDINT_H )
+check_include_files ( stdlib.h HAVE_STDLIB_H )
+check_include_files ( strings.h HAVE_STRING_H )
+check_include_files ( sys/mman.h HAVE_SYS_MMAN_H )
+check_include_files ( sys/param.h HAVE_SYS_PARAM_H )
+check_include_files ( sys/stat.h HAVE_SYS_STAT_H )
+check_include_files ( sys/times.h HAVE_SYS_TIMES_H )
+check_include_files ( sys/types.h HAVE_SYS_TYPES_H )
+check_include_files ( sys/unistd.h HAVE_UNISTD_H )
+check_include_files ( windows.h HAVE_WINDOWS_H )
+
+include(CheckSymbolExists)
+check_symbol_exists ( getenv "stdlib.h" HAVE_GETENV )
+
+include(CheckCXXCompilerFlag)
+check_cxx_source_compiles( "
+#include <sched.h>
+int main()
+{
+  int a = 10;
+  __sync_fetch_and_add(&a, 10);
+  __sync_val_compare_and_swap(&a, 0, 10);
+  sched_yield();
+  return 0;
+}" HAVE_GCC_ATOMIC_OPS)
+
+check_cxx_source_compiles( "
+#include <libkern/OSAtomic.h>
+int main()
+{
+  int a = 10;
+  OSAtomicAdd32(10, &a);
+  OSAtomicCompareAndSwapInt(10, 0, &a);
+  return 0;
+}" HAVE_OSX_ATOMIC_OPS)
+
+check_cxx_source_compiles( "
+int main()
+{
+  __thread int a = 0;
+  a = 10;
+  return 0;
+}" HAVE_TLS_KEYWORD)
+
+option(BUILD_STATIC "Build static library" ON)
+
+set(SOURCES src/feature_index.cpp
 	src/param.cpp
 	src/learner.cpp
 	src/string_buffer.cpp
@@ -31,7 +86,7 @@ add_library(libmecab STATIC
 	src/nbest_generator.cpp
 	src/libmecab.cpp)
 	
-add_definitions( -DMECAB_STATIC
+add_definitions( -DHAVE_CONFIG_H 
 					 -DMECAB_USE_THREAD 
 					 -DHAVE_GETENV 
 					 -D_UNICODE
@@ -39,6 +94,13 @@ add_definitions( -DMECAB_STATIC
 					 -DVERSION="0.996"
 					 -DPACKAGE="mecab"
 					 -DMECAB_DEFAULT_RC="")
+if (BUILD_STATIC)
+	add_definitions( -DMECAB_STATIC )
+	add_library(libmecab STATIC ${SOURCES})
+else()
+	add_library(libmecab SHARED ${SOURCES})
+endif()
+
 if(MSVC)
 add_definitions (-D_CRT_SECURE_NO_DEPRECATE -DHAVE_WINDOWS_H )
 endif()
