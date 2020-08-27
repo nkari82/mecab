@@ -7,6 +7,7 @@
 #cmakedefine HAVE_GETENV								1
 #cmakedefine HAVE_GETPAGESIZE							1
 #cmakedefine HAVE_ICONV									1
+#define ICONV_CONST
 #cmakedefine HAVE_INTTYPES_H							1
 #cmakedefine HAVE_IO_H									1
 #cmakedefine HAVE_LIBPTHREAD							1
