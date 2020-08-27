@@ -1,3 +1,4 @@
+#cmakedefine AC_APPLE_UNIVERSAL_BUILD				1
 #cmakedefine HAVE_CTYPE_H								1
 #cmakedefine HAVE_DIRENT_H								1
 #cmakedefine HAVE_DLFCN_H								1

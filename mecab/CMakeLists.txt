@@ -7,7 +7,11 @@ cmake_host_system_information(RESULT _platform QUERY OS_PLATFORM)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/config.h.cmake ${CMAKE_CURRENT_SOURCE_DIR}/src/config.h)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-include ( CheckIncludeFiles )
+include (CheckIncludeFiles)
+include (CheckSymbolExists)
+include (CheckFunctionExists)
+include (CheckCXXCompilerFlag)
+
 check_include_files ( ctype.h HAVE_CTYPE_H )
 check_include_files ( dirent.h HAVE_DIRENT_H )
 check_include_files ( dlfcn.h HAVE_DLFCN_H )
@@ -28,10 +32,9 @@ check_include_files ( sys/types.h HAVE_SYS_TYPES_H )
 check_include_files ( sys/unistd.h HAVE_UNISTD_H )
 check_include_files ( windows.h HAVE_WINDOWS_H )
 
-include(CheckSymbolExists)
-check_symbol_exists ( getenv "stdlib.h" HAVE_GETENV )
+check_function_exists ( getenv HAVE_GETENV )
+check_function_exists ( mmap HAVE_MMAP )
 
-include(CheckCXXCompilerFlag)
 check_cxx_source_compiles( "
 #include <sched.h>
 int main()
