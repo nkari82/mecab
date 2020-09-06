@@ -56,7 +56,18 @@ extern "C" {
 
 namespace MeCab {
 
-template <class T> class Mmap {
+class IMmap {
+public:
+	virtual ~IMmap() {}
+	virtual bool open(const char *filename, const char *mode = "r") = 0;
+	virtual void close() = 0;
+	virtual size_t size() = 0;
+
+	template<class T = char>
+	const char* begin() { return static_cast<Mmap<T>*>(this)->begin(); }
+};
+
+template <class T> class Mmap : public IMmap {
  private:
   T            *text;
   size_t       length;
@@ -78,7 +89,7 @@ template <class T> class Mmap {
   const T* begin()    const  { return text; }
   T*       end()           { return text + size(); }
   const T* end()    const  { return text + size(); }
-  size_t size()               { return length/sizeof(T); }
+  size_t size() override      { return length/sizeof(T); }
   const char *what()          { return what_.str(); }
   const char *file_name()     { return fileName.c_str(); }
   size_t file_size()          { return length; }
@@ -87,7 +98,7 @@ template <class T> class Mmap {
   // This code is imported from sufary, develoved by
   //  TATUO Yamashita <yto@nais.to> Thanks!
 #if defined(_WIN32) && !defined(__CYGWIN__)
-  bool open(const char *filename, const char *mode = "r") {
+  bool open(const char *filename, const char *mode = "r") override {
     this->close();
     unsigned long mode1, mode2, mode3;
     fileName = std::string(filename);
@@ -120,7 +131,7 @@ template <class T> class Mmap {
     return true;
   }
 
-  void close() {
+  void close() override {
     if (text) { ::UnmapViewOfFile(text); }
     if (hFile != INVALID_HANDLE_VALUE) {
       ::CloseHandle(hFile);
@@ -137,7 +148,7 @@ template <class T> class Mmap {
 
 #else
 
-  bool open(const char *filename, const char *mode = "r") {
+  bool open(const char *filename, const char *mode = "r") override {
     this->close();
     struct stat st;
     fileName = std::string(filename);
@@ -178,7 +189,7 @@ template <class T> class Mmap {
     return true;
   }
 
-  void close() {
+  void close() override {
     if (fd >= 0) {
       ::close(fd);
       fd = -1;

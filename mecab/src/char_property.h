@@ -82,7 +82,7 @@ class CharProperty {
   virtual ~CharProperty() { this->close(); }
 
  private:
-  scoped_ptr<Mmap<char> >   cmmap_;
+  scoped_ptr<IMmap>   cmmap_;
   std::vector<const char *>  clist_;
   const CharInfo            *map_;
   int                        charset_;

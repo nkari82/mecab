@@ -119,7 +119,7 @@ else()
 endif()
 
 if(Iconv_FOUND)
-	check_include_files ( ${Iconv_INCLUDE_DIRS}/iconv.h HAVE_ICONV )
+	check_include_files ( ${Iconv_INCLUDE_DIR}/iconv.h HAVE_ICONV )
 	link_directories( ${Iconv_LIBRARY_DIR} )
 	
 	set(Iconv_LIBRARIES libiconv)
@@ -128,7 +128,7 @@ if(Iconv_FOUND)
 		set(Iconv_LIBRARIES ${Iconv_LIBRARIES} libcharset)
 	endif()
 	
-	target_include_directories(libmecab PRIVATE ./src ./ ${Iconv_INCLUDE_DIRS})
+	target_include_directories(libmecab PRIVATE ./src ./ ${Iconv_INCLUDE_DIR})
 	if (BUILD_STATIC)
 		set(ADDITIONAL_LIBRARIES ${ADDITIONAL_LIBRARIES} ${Iconv_LIBRARIES})
 	else()
