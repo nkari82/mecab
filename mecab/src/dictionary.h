@@ -28,7 +28,7 @@ class Dictionary {
  public:
   typedef Darts::DoubleArray::result_pair_type result_type;
 
-  bool open(const char *filename, const char *mode = "r");
+  bool open(const char *filename, const char *mode = "r", macab_io_file_t *io = nullptr);
   void close();
 
   size_t commonPrefixSearch(const char* key, size_t len,

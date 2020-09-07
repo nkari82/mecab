@@ -50,7 +50,7 @@ bool DecoderLearnerTagger::open(const Param &param) {
   tokenizer_ = tokenizer_data_.get();
   feature_index_ = feature_index_data_.get();
 
-  CHECK_DIE(tokenizer_->open(param)) << tokenizer_->what();
+  CHECK_DIE(tokenizer_->open(param, nullptr)) << tokenizer_->what();
   CHECK_DIE(feature_index_->open(param));
 
   return true;

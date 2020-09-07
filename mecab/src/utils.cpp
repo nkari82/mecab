@@ -289,7 +289,7 @@ int load_request_type(const Param &param) {
   return request_type;
 }
 
-bool load_dictionary_resource(Param *param) {
+bool load_dictionary_resource(Param *param, macab_io_file_t *io) {
   std::string rcfile = param->get<std::string>("rcfile");
 
 #ifdef HAVE_GETENV
@@ -371,7 +371,7 @@ bool load_dictionary_resource(Param *param) {
     rcfile = MECAB_DEFAULT_RC;
   }
 
-  if (!param->load(rcfile.c_str())) {
+  if (!param->load(rcfile.c_str(), io)) {
     return false;
   }
 
@@ -384,7 +384,7 @@ bool load_dictionary_resource(Param *param) {
   param->set<std::string>("dicdir", dicdir, true);
   dicdir = create_filename(dicdir, DICRC);
 
-  if (!param->load(dicdir.c_str())) {
+  if (!param->load(dicdir.c_str(), io)) {
     return false;
   }
 

@@ -96,7 +96,8 @@ set(SOURCES src/feature_index.cpp
 	src/lbfgs.cpp
 	src/eval.cpp
 	src/nbest_generator.cpp
-	src/libmecab.cpp)
+	src/libmecab.cpp
+	src/file.cpp)
 	
 add_definitions( -DHAVE_CONFIG_H 
 					 -DMECAB_USE_THREAD 

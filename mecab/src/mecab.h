@@ -8,6 +8,13 @@
 #define MECAB_MECAB_H_
 
 /* C/C++ common data structures  */
+/*
+* File IO Mapper
+*/
+struct macab_io_file_t {
+	int(*open)(const char *path);
+	void(*close)(int handle);
+};
 
 /**
  * DictionaryInfo structure
@@ -354,7 +361,7 @@ extern "C" {
 #ifndef MECAB_DLL_CLASS_EXTERN
 #  define MECAB_DLL_CLASS_EXTERN
 #endif
-
+  typedef struct macab_io_file_t         macab_io_file_t;
   typedef struct mecab_t                 mecab_t;
   typedef struct mecab_model_t           mecab_model_t;
   typedef struct mecab_lattice_t         mecab_lattice_t;
@@ -756,7 +763,7 @@ extern "C" {
                                                     mecab_lattice_t *lattice);
 
   /* static functions */
-  MECAB_DLL_EXTERN int           mecab_do(int argc, char **argv);
+  MECAB_DLL_EXTERN int           mecab_do(int argc, char **argv, macab_io_file_t *io = nullptr);
   MECAB_DLL_EXTERN int           mecab_dict_index(int argc, char **argv);
   MECAB_DLL_EXTERN int           mecab_dict_gen(int argc, char **argv);
   MECAB_DLL_EXTERN int           mecab_cost_train(int argc, char **argv);

@@ -13,22 +13,19 @@
 
 namespace MeCab {
 
-bool Connector::open(const Param &param) {
+bool Connector::open(const Param &param, macab_io_file_t *io) {
   const std::string filename = create_filename
       (param.get<std::string>("dicdir"), MATRIX_FILE);
-  return open(filename.c_str());
+  return open(filename.c_str(), "r", io);
 }
 
-bool Connector::open(const char* filename,
-                     const char *mode) {
-  CHECK_FALSE(cmmap_->open(filename, mode))
-      << "cannot open: " << filename;
+bool Connector::open(const char* filename, const char *mode, macab_io_file_t *io) {
+  CHECK_FALSE(cmmap_->open(filename, mode, io)) << "cannot open: " << filename;
 
   matrix_ = cmmap_->begin();
 
   CHECK_FALSE(matrix_) << "matrix is NULL" ;
-  CHECK_FALSE(cmmap_->size() >= 2)
-      << "file size is invalid: " << filename;
+  CHECK_FALSE(cmmap_->size() >= 2) << "file size is invalid: " << filename;
 
   lsize_ = static_cast<unsigned short>((*cmmap_)[0]);
   rsize_ = static_cast<unsigned short>((*cmmap_)[1]);

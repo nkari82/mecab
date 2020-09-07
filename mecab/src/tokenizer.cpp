@@ -55,7 +55,7 @@ template Node* Tokenizer<Node, Path>::lookup<true>(
     const char *,
     Allocator<Node, Path> *,
     Lattice *) const;
-template bool Tokenizer<Node, Path>::open(const Param &);
+template bool Tokenizer<Node, Path>::open(const Param &, macab_io_file_t*);
 template Tokenizer<LearnerNode, LearnerPath>::Tokenizer();
 template void Tokenizer<LearnerNode, LearnerPath>::close();
 template const DictionaryInfo
@@ -68,7 +68,7 @@ template LearnerNode *Tokenizer<LearnerNode, LearnerPath>::lookup<false>(
     const char *,
     const char *,
     Allocator<LearnerNode, LearnerPath> *, Lattice *) const;
-template bool Tokenizer<LearnerNode, LearnerPath>::open(const Param &);
+template bool Tokenizer<LearnerNode, LearnerPath>::open(const Param &, macab_io_file_t*);
 
 template <typename N, typename P>
 Tokenizer<N, P>::Tokenizer()
@@ -94,24 +94,17 @@ N *Tokenizer<N, P>::getEOSNode(Allocator<N, P> *allocator) const {
 }
 
 template <typename N, typename P>
-bool Tokenizer<N, P>::open(const Param &param) {
+bool Tokenizer<N, P>::open(const Param &param, macab_io_file_t *io) {
   close();
 
   const std::string prefix = param.template get<std::string>("dicdir");
 
-  CHECK_FALSE(unkdic_.open(create_filename
-                                 (prefix, UNK_DIC_FILE).c_str()))
-      << unkdic_.what();
-  CHECK_FALSE(property_.open(param)) << property_.what();
+  CHECK_FALSE(unkdic_.open(create_filename(prefix, UNK_DIC_FILE).c_str(), "r", io)) << unkdic_.what();
+  CHECK_FALSE(property_.open(param, io)) << property_.what();
 
   Dictionary *sysdic = new Dictionary;
-
-  CHECK_FALSE(sysdic->open
-                    (create_filename(prefix, SYS_DIC_FILE).c_str()))
-      << sysdic->what();
-
-  CHECK_FALSE(sysdic->type() == 0)
-      << "not a system dictionary: " << prefix;
+  CHECK_FALSE(sysdic->open(create_filename(prefix, SYS_DIC_FILE).c_str(), "r", io)) << sysdic->what();
+  CHECK_FALSE(sysdic->type() == 0) << "not a system dictionary: " << prefix;
 
   property_.set_charset(sysdic->charset());
   dic_.push_back(sysdic);

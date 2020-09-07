@@ -45,13 +45,13 @@ Viterbi::Viterbi()
 
 Viterbi::~Viterbi() {}
 
-bool Viterbi::open(const Param &param) {
+bool Viterbi::open(const Param &param, macab_io_file_t *io) {
   tokenizer_.reset(new Tokenizer<Node, Path>);
-  CHECK_FALSE(tokenizer_->open(param)) << tokenizer_->what();
+  CHECK_FALSE(tokenizer_->open(param, io)) << tokenizer_->what();
   CHECK_FALSE(tokenizer_->dictionary_info()) << "Dictionary is empty";
 
   connector_.reset(new Connector);
-  CHECK_FALSE(connector_->open(param)) << connector_->what();
+  CHECK_FALSE(connector_->open(param, io)) << connector_->what();
 
   CHECK_FALSE(tokenizer_->dictionary_info()->lsize ==
               connector_->left_size() &&

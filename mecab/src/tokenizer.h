@@ -120,7 +120,7 @@ class Tokenizer {
   template <bool IsPartial> N *lookup(const char *begin, const char *end,
                                       Allocator<N, P> *allocator,
                                       Lattice *lattice) const;
-  bool open(const Param &param);
+  bool open(const Param &param, macab_io_file_t *io);
   void close();
 
   const DictionaryInfo *dictionary_info() const;

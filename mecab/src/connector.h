@@ -24,7 +24,7 @@ class Connector {
 
  public:
 
-  bool open(const Param &param);
+  bool open(const Param &param, macab_io_file_t *io);
   void close();
   void clear() {}
 
@@ -50,7 +50,7 @@ class Connector {
   const short *matrix() const { return &matrix_[0]; }
 
   bool openText(const char *filename);
-  bool open(const char *filename, const char *mode = "r");
+  bool open(const char *filename, const char *mode = "r", macab_io_file_t *io = nullptr);
 
   bool is_valid(size_t lid, size_t rid) const {
     return (lid >= 0 && lid < rsize_ && rid >= 0 && rid < lsize_);

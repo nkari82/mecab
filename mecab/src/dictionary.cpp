@@ -73,10 +73,10 @@ struct pair_1st_cmp: public std::binary_function<bool, T1, T2> {
 };
 }  // namespace
 
-bool Dictionary::open(const char *file, const char *mode) {
+bool Dictionary::open(const char *file, const char *mode, macab_io_file_t *io) {
   close();
   filename_.assign(file);
-  CHECK_FALSE(dmmap_->open(file, mode))
+  CHECK_FALSE(dmmap_->open(file, mode, io))
       << "no such file or directory: " << file;
 
   CHECK_FALSE(dmmap_->size() >= 100)
@@ -168,7 +168,7 @@ bool Dictionary::assignUserDictionaryCosts(
   rewriter.open(rewrite_file.c_str(), &config_iconv);
   CHECK_DIE(fi.open(param)) << "cannot open feature index";
 
-  CHECK_DIE(property.open(param));
+  CHECK_DIE(property.open(param, nullptr));
   property.set_charset(from.c_str());
 
   if (!matrix.openText(matrix_file.c_str()) &&
@@ -331,7 +331,7 @@ bool Dictionary::compile(const Param &param,
           fi.reset(new DecoderFeatureIndex);
           CHECK_DIE(fi->open(param)) << "cannot open feature index";
           property.reset(new CharProperty);
-          CHECK_DIE(property->open(param));
+          CHECK_DIE(property->open(param, nullptr));
           property->set_charset(from.c_str());
         }
         cost = calcCost(w, feature, factor,

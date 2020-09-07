@@ -73,7 +73,7 @@ class CRFLearner {
     Tokenizer<LearnerNode, LearnerPath> tokenizer;
     Allocator<LearnerNode, LearnerPath> allocator;
 
-    CHECK_DIE(tokenizer.open(*param)) << "cannot open tokenizer";
+    CHECK_DIE(tokenizer.open(*param, nullptr)) << "cannot open tokenizer";
     CHECK_DIE(feature_index.open(*param)) << "cannot open feature index";
 
     if (!old_model.empty()) {

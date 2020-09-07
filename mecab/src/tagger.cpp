@@ -83,7 +83,7 @@ class ModelImpl: public Model {
 
   bool open(int argc, char **argv);
   bool open(const char *arg);
-  bool open(const Param &param);
+  bool open(const Param &param, macab_io_file_t *io);
 
   bool swap(Model *model);
 
@@ -352,7 +352,7 @@ bool ModelImpl::open(int argc, char **argv) {
     setGlobalError(param.what());
     return false;
   }
-  return open(param);
+  return open(param, nullptr);
 }
 
 bool ModelImpl::open(const char *arg) {
@@ -362,11 +362,11 @@ bool ModelImpl::open(const char *arg) {
     setGlobalError(param.what());
     return false;
   }
-  return open(param);
+  return open(param, nullptr);
 }
 
-bool ModelImpl::open(const Param &param) {
-  if (!writer_->open(param) || !viterbi_->open(param)) {
+bool ModelImpl::open(const Param &param, macab_io_file_t *io) {
+  if (!writer_->open(param) || !viterbi_->open(param, io)) {
     std::string error = viterbi_->what();
     if (!error.empty()) {
       error.append(" ");
@@ -1130,11 +1130,14 @@ void deleteLattice(Lattice *lattice) {
 }
 }  // MeCab
 
-int mecab_do(int argc, char **argv) {
+int mecab_do(int argc, char **argv, macab_io_file_t *io) {
 #define WHAT_ERROR(msg) do {                    \
     std::cout << msg << std::endl;              \
     return EXIT_FAILURE; }                      \
   while (0);
+
+  if (io == nullptr)
+	 io = MeCab::default_io();
 
   MeCab::Param param;
   if (!param.open(argc, argv, MeCab::long_options)) {
@@ -1152,7 +1155,7 @@ int mecab_do(int argc, char **argv) {
     return EXIT_SUCCESS;
   }
 
-  if (!load_dictionary_resource(&param)) {
+  if (!load_dictionary_resource(&param, io)) {
     std::cout << param.what() << std::endl;
     return EXIT_SUCCESS;
   }
@@ -1163,7 +1166,7 @@ int mecab_do(int argc, char **argv) {
   }
 
   MeCab::scoped_ptr<MeCab::ModelImpl> model(new MeCab::ModelImpl);
-  if (!model->open(param)) {
+  if (!model->open(param, io)) {
     std::cout << MeCab::getLastError() << std::endl;
     return EXIT_FAILURE;
   }

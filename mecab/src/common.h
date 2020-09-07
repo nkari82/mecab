@@ -93,6 +93,8 @@
 #define WPATH(path) (path)
 #endif
 
+struct macab_io_file_t;
+
 namespace MeCab {
 class die {
  public:
@@ -124,6 +126,8 @@ class wlog {
  private:
   whatlog *what_;
 };
+
+extern macab_io_file_t* default_io();
 }  // MeCab
 
 #define WHAT what_.stream_

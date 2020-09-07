@@ -155,7 +155,7 @@ bool DecoderFeatureIndex::openFromArray(const char *begin, const char *end) {
 
 bool DecoderFeatureIndex::openBinaryModel(const Param &param) {
   const std::string modelfile = param.get<std::string>("model");
-  CHECK_DIE(mmap_.open(modelfile.c_str())) << mmap_.what();
+  CHECK_DIE(mmap_.open(modelfile.c_str(), "r", nullptr)) << mmap_.what();
   if (!openFromArray(mmap_.begin(), mmap_.end())) {
     mmap_.close();
     return false;
@@ -480,7 +480,7 @@ void EncoderFeatureIndex::shrink(size_t freq,
   std::map<int, int> old2new;
   for (size_t i = 0; i < freqv.size(); ++i) {
     if (freqv[i] >= freq) {
-      old2new.insert(std::pair<int, int>(i, maxid_++));
+      old2new.insert(std::pair<int, int>(int(i), int(maxid_++)));
     }
   }
 

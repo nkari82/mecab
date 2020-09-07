@@ -25,8 +25,8 @@ struct CharInfo {
 
 class CharProperty {
  public:
-  bool open(const Param &);
-  bool open(const char*);
+  bool open(const Param &, macab_io_file_t*);
+  bool open(const char*, macab_io_file_t*);
   void close();
   size_t size() const;
   void set_charset(const char *charset);
@@ -82,7 +82,7 @@ class CharProperty {
   virtual ~CharProperty() { this->close(); }
 
  private:
-  scoped_ptr<IMmap>   cmmap_;
+  scoped_ptr<Mmap<char>>   cmmap_;
   std::vector<const char *>  clist_;
   const CharInfo            *map_;
   int                        charset_;

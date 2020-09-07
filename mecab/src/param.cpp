@@ -5,6 +5,7 @@
 //  Copyright(C) 2004-2006 Nippon Telegraph and Telephone Corporation
 #include <cstdio>
 #include <fstream>
+#include "mecab.h"
 #include "common.h"
 #include "param.h"
 #include "string_buffer.h"
@@ -12,6 +13,14 @@
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
+#endif
+
+#ifdef ERROR
+#undef ERROR
+#endif
+
+#ifdef max
+#undef max
 #endif
 
 namespace MeCab {
@@ -63,7 +72,7 @@ void Param::dump_config(std::ostream *os) const {
   }
 }
 
-bool Param::load(const char *filename) {
+bool Param::load(const char *filename, macab_io_file_t *io) {
   std::ifstream ifs(WPATH(filename));
 
   CHECK_FALSE(ifs) << "no such file or directory: " << filename;

@@ -71,15 +71,15 @@ CharInfo encode(const std::vector<std::string> &c,
 }
 }
 
-bool CharProperty::open(const Param &param) {
+bool CharProperty::open(const Param &param, macab_io_file_t *io) {
   const std::string prefix   = param.get<std::string>("dicdir");
   const std::string filename = create_filename(prefix, CHAR_PROPERTY_FILE);
-  return open(filename.c_str());
+  return open(filename.c_str(), io);
 }
 
-bool CharProperty::open(const char *filename) {
+bool CharProperty::open(const char *filename, macab_io_file_t *io) {
   std::ostringstream error;
-  CHECK_FALSE(cmmap_->open(filename, "r"));
+  CHECK_FALSE(cmmap_->open(filename, "r", io));
 
   const char *ptr = cmmap_->begin();
   unsigned int csize;

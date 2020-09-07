@@ -108,7 +108,7 @@ bool file_exists(const char *filename);
 
 int load_request_type(const Param &param);
 
-bool load_dictionary_resource(Param *);
+bool load_dictionary_resource(Param *, struct macab_io_file_t *io = nullptr);
 
 bool escape_csv_element(std::string *w);
 
