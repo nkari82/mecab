@@ -12,7 +12,7 @@
 * File IO Mapper
 */
 struct macab_io_file_t {
-	size_t(*open)(const char *path, const char *mode);
+	size_t(*open)(const char *path, const char *mode, void **mapped);
 	void(*close)(size_t handle);
 	size_t(*read)(size_t handle, char *buffer, size_t size);
 };

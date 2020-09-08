@@ -48,6 +48,7 @@ extern "C" {
 }
 
 #include "common.h"
+#include "mecab.h"
 #include "utils.h"
 
 #ifndef O_BINARY
@@ -70,9 +71,8 @@ template <class T> class Mmap {
   int    fd;
   int    flag;
 #endif
-  size_t(*open_)(const char *path, const char *mode);
-  void(*close_)(size_t handle);
-  size_t(*read_)(size_t handle, char *buffer, size_t size);
+  size_t handle_;
+  macab_io_file_t io_;
 
  public:
   T&       operator[](size_t n)       { return *(text + n); }
@@ -136,15 +136,11 @@ template <class T> class Mmap {
     text = 0;
   }
 
-  Mmap(): text(0), hFile(INVALID_HANDLE_VALUE), hMap(0) {}
-  Mmap(macab_io_file_t *io) : Mmap()
-  {
-	  if (io == nullptr)
-		  return;
-	  open_ = io->open;
-	  close_ = io->close;
-	  read_ = io->read;
-  }
+  Mmap(macab_io_file_t *io = nullptr) 
+	  : text(0)
+	  , hFile(INVALID_HANDLE_VALUE)
+	  , hMap(0), io_(!io ? *default_io() : *io)
+  {}
 #else
 
   bool open(const char *filename, const char *mode = "r") {
