@@ -76,7 +76,8 @@ struct pair_1st_cmp: public std::binary_function<bool, T1, T2> {
 bool Dictionary::open(const char *file, const char *mode, macab_io_file_t *io) {
   close();
   filename_.assign(file);
-  CHECK_FALSE(dmmap_->open(file, mode, io))
+  dmmap_.reset(new Mmap<char>(io));
+  CHECK_FALSE(dmmap_->open(file, mode))
       << "no such file or directory: " << file;
 
   CHECK_FALSE(dmmap_->size() >= 100)
@@ -126,7 +127,7 @@ bool Dictionary::open(const char *file, const char *mode, macab_io_file_t *io) {
 }
 
 void Dictionary::close() {
-  dmmap_->close();
+  dmmap_.reset();
 }
 
 #define DCONF(file) create_filename(dicdir, std::string(file));

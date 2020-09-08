@@ -366,6 +366,7 @@ bool ModelImpl::open(const char *arg) {
 }
 
 bool ModelImpl::open(const Param &param, macab_io_file_t *io) {
+  if (!io) io = default_io();
   if (!writer_->open(param) || !viterbi_->open(param, io)) {
     std::string error = viterbi_->what();
     if (!error.empty()) {

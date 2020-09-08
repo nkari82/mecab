@@ -78,7 +78,7 @@ class CharProperty {
 
   static bool compile(const char *, const char *, const char*);
 
-  CharProperty(): cmmap_(new Mmap<char>), map_(0), charset_(0) {}
+  CharProperty(): cmmap_(new Mmap<char>()), map_(0), charset_(0) {}
   virtual ~CharProperty() { this->close(); }
 
  private:

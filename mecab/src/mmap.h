@@ -70,6 +70,9 @@ template <class T> class Mmap {
   int    fd;
   int    flag;
 #endif
+  size_t(*open_)(const char *path, const char *mode);
+  void(*close_)(size_t handle);
+  size_t(*read_)(size_t handle, char *buffer, size_t size);
 
  public:
   T&       operator[](size_t n)       { return *(text + n); }
@@ -87,7 +90,7 @@ template <class T> class Mmap {
   // This code is imported from sufary, develoved by
   //  TATUO Yamashita <yto@nais.to> Thanks!
 #if defined(_WIN32) && !defined(__CYGWIN__)
-  bool open(const char *filename, const char *mode = "r", macab_io_file_t *io = nullptr) {
+  bool open(const char *filename, const char *mode = "r") {
     this->close();
     unsigned long mode1, mode2, mode3;
     fileName = std::string(filename);
@@ -134,7 +137,14 @@ template <class T> class Mmap {
   }
 
   Mmap(): text(0), hFile(INVALID_HANDLE_VALUE), hMap(0) {}
-
+  Mmap(macab_io_file_t *io) : Mmap()
+  {
+	  if (io == nullptr)
+		  return;
+	  open_ = io->open;
+	  close_ = io->close;
+	  read_ = io->read;
+  }
 #else
 
   bool open(const char *filename, const char *mode = "r") {

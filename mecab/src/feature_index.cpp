@@ -155,7 +155,7 @@ bool DecoderFeatureIndex::openFromArray(const char *begin, const char *end) {
 
 bool DecoderFeatureIndex::openBinaryModel(const Param &param) {
   const std::string modelfile = param.get<std::string>("model");
-  CHECK_DIE(mmap_.open(modelfile.c_str(), "r", nullptr)) << mmap_.what();
+  CHECK_DIE(mmap_.open(modelfile.c_str(), "r")) << mmap_.what();
   if (!openFromArray(mmap_.begin(), mmap_.end())) {
     mmap_.close();
     return false;

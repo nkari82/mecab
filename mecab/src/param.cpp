@@ -73,14 +73,15 @@ void Param::dump_config(std::ostream *os) const {
 }
 
 bool Param::load(const char *filename, macab_io_file_t *io) {
-  std::ifstream ifs(WPATH(filename));
+  if (!io) io = default_io();
+  iobuf buf(WPATH(filename), io);
+  std::istream ifs((std::streambuf*)&buf);
 
   CHECK_FALSE(ifs) << "no such file or directory: " << filename;
 
   std::string line;
   while (std::getline(ifs, line)) {
-    if (!line.size() ||
-        (line.size() && (line[0] == ';' || line[0] == '#'))) continue;
+    if (!line.size() || (line.size() && (line[0] == ';' || line[0] == '#'))) continue;
 
     size_t pos = line.find('=');
     CHECK_FALSE(pos != std::string::npos) << "format error: " << line;
@@ -92,7 +93,6 @@ bool Param::load(const char *filename, macab_io_file_t *io) {
     const std::string key   = line.substr(0, s2 + 1);
     set<std::string>(key.c_str(), value, false);
   }
-
   return true;
 }
 

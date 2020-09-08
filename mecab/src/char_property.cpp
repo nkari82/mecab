@@ -79,7 +79,7 @@ bool CharProperty::open(const Param &param, macab_io_file_t *io) {
 
 bool CharProperty::open(const char *filename, macab_io_file_t *io) {
   std::ostringstream error;
-  CHECK_FALSE(cmmap_->open(filename, "r", io));
+  CHECK_FALSE(cmmap_->open(filename, "r"));
 
   const char *ptr = cmmap_->begin();
   unsigned int csize;

@@ -24,7 +24,7 @@ namespace MeCab {
 void copy(const char *src, const char *dst) {
   std::cout << "copying " << src << " to " <<  dst << std::endl;
   Mmap<char> mmap;
-  CHECK_DIE(mmap.open(src, "r", nullptr)) << mmap.what();
+  CHECK_DIE(mmap.open(src, "r")) << mmap.what();
   std::ofstream ofs(WPATH(dst), std::ios::binary|std::ios::out);
   CHECK_DIE(ofs) << "permission denied: " << dst;
   ofs.write(reinterpret_cast<char*>(mmap.begin()), mmap.size());

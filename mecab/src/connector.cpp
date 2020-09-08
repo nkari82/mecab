@@ -20,7 +20,7 @@ bool Connector::open(const Param &param, macab_io_file_t *io) {
 }
 
 bool Connector::open(const char* filename, const char *mode, macab_io_file_t *io) {
-  CHECK_FALSE(cmmap_->open(filename, mode, io)) << "cannot open: " << filename;
+  CHECK_FALSE(cmmap_->open(filename, mode)) << "cannot open: " << filename;
 
   matrix_ = cmmap_->begin();
 

@@ -77,7 +77,7 @@ class Dictionary {
 
   const char *what() { return what_.str(); }
 
-  explicit Dictionary(): dmmap_(new Mmap<char>), token_(0),
+  explicit Dictionary(): dmmap_(nullptr), token_(0),
                          feature_(0), charset_(0) {}
   virtual ~Dictionary() { this->close(); }
 

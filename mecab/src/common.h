@@ -127,7 +127,20 @@ class wlog {
   whatlog *what_;
 };
 
-extern macab_io_file_t* default_io();
+macab_io_file_t* default_io();
+
+class iobuf : std::streambuf
+{
+private:
+	macab_io_file_t* io_;
+	size_t  handle_;
+	char  buffer_[8192];
+
+public:
+	iobuf(const char* file, macab_io_file_t *io);
+	~iobuf();
+	int underflow();
+};
 }  // MeCab
 
 #define WHAT what_.stream_
