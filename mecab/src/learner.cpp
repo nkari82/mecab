@@ -168,9 +168,9 @@ class CRFLearner {
     if (thread_num > 1) {
       thread.resize(thread_num);
       for (size_t i = 0; i < thread_num; ++i) {
-        thread[i].start_i = i;
+        thread[i].start_i = (unsigned short)i;
         thread[i].size = x.size();
-        thread[i].thread_num = thread_num;
+        thread[i].thread_num = (unsigned short)thread_num;
         thread[i].x = &x[0];
         thread[i].expected.resize(expected.size());
       }
@@ -282,7 +282,7 @@ class CRFLearner {
 
 class Learner {
  public:
-  static bool run(int argc, char **argv) {
+  static int run(int argc, char **argv) {
     static const MeCab::Option long_options[] = {
       { "dicdir",   'd',  ".",     "DIR",
         "set DIR as dicdir(default \".\" )" },

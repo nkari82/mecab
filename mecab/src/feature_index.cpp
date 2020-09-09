@@ -456,8 +456,8 @@ int DecoderFeatureIndex::id(const char *key) {
 int EncoderFeatureIndex::id(const char *key) {
   std::map<std::string, int>::const_iterator it = dic_.find(key);
   if (it == dic_.end()) {
-    dic_.insert(std::pair<std::string, int>(std::string(key), maxid_));
-    return maxid_++;
+    dic_.insert(std::pair<std::string, int>(std::string(key), int(maxid_)));
+    return int(maxid_++);
   } else {
     return it->second;
   }
@@ -664,7 +664,7 @@ bool EncoderFeatureIndex::reopen(const char *filename,
         << "format error: " << buf.get();
     std::string feature = column[1];
     CHECK_DIE(iconv.convert(&feature));
-    dic_.insert(std::make_pair(feature, maxid_++));
+    dic_.insert(std::make_pair(feature, int(maxid_++)));
     alpha->push_back(atof(column[0]));
   }
 

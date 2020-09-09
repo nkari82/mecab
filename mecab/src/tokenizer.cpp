@@ -134,9 +134,9 @@ bool Tokenizer<N, P>::open(const Param &param, macab_io_file_t *io) {
     d->next          = dictionary_info_;
     d->filename      = dic_[i]->filename();
     d->charset       = dic_[i]->charset();
-    d->size          = dic_[i]->size();
-    d->lsize         = dic_[i]->lsize();
-    d->rsize         = dic_[i]->rsize();
+    d->size          = unsigned int(dic_[i]->size());
+    d->lsize         = unsigned int(dic_[i]->lsize());
+    d->rsize         = unsigned int(dic_[i]->rsize());
     d->type          = dic_[i]->type();
     d->version       = dic_[i]->version();
     dictionary_info_ = d;
@@ -230,8 +230,8 @@ bool is_valid_node(const Lattice *lattice,  N *node) {
       read_node_info(unkdic_, *(token + k), &new_node);                  \
       new_node->char_type = cinfo.default_type;                          \
       new_node->surface = begin2;                                        \
-      new_node->length = begin3 - begin2;                                \
-      new_node->rlength = begin3 - begin;                                \
+      new_node->length = unsigned short(begin3 - begin2);                                \
+      new_node->rlength = unsigned short(begin3 - begin);                                \
       new_node->stat = MECAB_UNK_NODE;                                   \
       new_node->bnext = result_node;                                     \
       if (unk_feature_.get()) new_node->feature = unk_feature_.get();    \
@@ -277,8 +277,8 @@ N *Tokenizer<N, P>::lookup(const char *begin, const char *end,
       for (size_t j = 0; j < size; ++j) {
         N *new_node = allocator->newNode();
         read_node_info(**it, *(token + j), &new_node);
-        new_node->length = daresults[i].length;
-        new_node->rlength = begin2 - begin + new_node->length;
+        new_node->length = unsigned short(daresults[i].length);
+        new_node->rlength = unsigned short(begin2 - begin + new_node->length);
         new_node->surface = begin2;
         new_node->stat = MECAB_NOR_NODE;
         new_node->char_type = cinfo.default_type;
@@ -353,8 +353,8 @@ N *Tokenizer<N, P>::lookup(const char *begin, const char *end,
       N *new_node = allocator->newNode();
       new_node->char_type = cinfo.default_type;
       new_node->surface = begin2;
-      new_node->length = begin3 - begin2;
-      new_node->rlength = begin3 - begin;
+      new_node->length = unsigned short(begin3 - begin2);
+      new_node->rlength = unsigned short(begin3 - begin);
       new_node->stat = MECAB_UNK_NODE;
       new_node->bnext = result_node;
       new_node->feature =

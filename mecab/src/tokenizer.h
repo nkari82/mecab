@@ -24,7 +24,7 @@ class Allocator {
   N *newNode() {
     N *node = node_freelist_->alloc();
     std::memset(node, 0, sizeof(N));
-    node->id = id_++;
+    node->id = unsigned int(id_++);
     return node;
   }
 

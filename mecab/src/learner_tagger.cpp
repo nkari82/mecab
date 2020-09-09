@@ -88,7 +88,7 @@ bool EncoderLearnerTagger::read(std::istream *is,
       m->stat    = MECAB_NOR_NODE;
       m->surface = mystrdup(column[0]);
       m->feature = mystrdup(column[1]);
-      m->length  = m->rlength = std::strlen(column[0]);
+      m->length  = m->rlength = (unsigned short)std::strlen(column[0]);
     }
 
     corpus.push_back(m);
@@ -123,7 +123,7 @@ bool EncoderLearnerTagger::read(std::istream *is,
     if (!found) {
       LearnerNode *node = allocator_->newNode();
       node->surface  = begin_ + pos;
-      node->length   = node->rlength = std::strlen(corpus[i]->surface);
+      node->length   = node->rlength = (unsigned short)std::strlen(corpus[i]->surface);
       node->feature  = feature_index_->strdup(corpus[i]->feature);
       node->stat     = MECAB_NOR_NODE;
       node->fvector  = 0;

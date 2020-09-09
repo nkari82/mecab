@@ -206,7 +206,7 @@ class TaggerImpl: public Tagger {
 
   void initRequestType() {
     mutable_lattice()->set_request_type(request_type_);
-    mutable_lattice()->set_theta(theta_);
+    mutable_lattice()->set_theta((float)theta_);
   }
 
   Lattice *mutable_lattice() {
@@ -257,7 +257,7 @@ class LatticeImpl : public Lattice {
   void set_Z(double Z) { Z_ = Z; }
   double Z() const { return Z_; }
 
-  float theta() const { return theta_; }
+  float theta() const { return (float)theta_; }
   void  set_theta(float theta) { theta_ = theta; }
 
   int request_type() const { return request_type_; }
@@ -430,7 +430,7 @@ Tagger *ModelImpl::createTagger() const {
     delete tagger;
     return 0;
   }
-  tagger->set_theta(theta_);
+  tagger->set_theta((float)theta_);
   tagger->set_request_type(request_type_);
   return tagger;
 }
@@ -513,7 +513,7 @@ void TaggerImpl::set_theta(float theta) {
 }
 
 float TaggerImpl::theta() const {
-  return theta_;
+  return (float)theta_;
 }
 
 void TaggerImpl::set_lattice_level(int level) {
@@ -845,8 +845,8 @@ void LatticeImpl::set_result(const char *result) {
     node->prev = prev;
     prev->next = node;
     node->surface = sentence_ + offset;
-    node->length = surfaces[i].size();
-    node->rlength = surfaces[i].size();
+    node->length = unsigned short(surfaces[i].size());
+    node->rlength = unsigned short(surfaces[i].size());
     node->isbest = 1;
     node->stat = MECAB_NOR_NODE;
     node->wcost = 0;

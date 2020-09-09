@@ -26,7 +26,7 @@ namespace {
 void calc_alpha(Node *n, double beta) {
   n->alpha = 0.0;
   for (Path *path = n->lpath; path; path = path->lnext) {
-    n->alpha = logsumexp(n->alpha,
+    n->alpha = (float)logsumexp(n->alpha,
                          -beta * path->cost + path->lnode->alpha,
                          path == n->lpath);
   }
@@ -35,7 +35,7 @@ void calc_alpha(Node *n, double beta) {
 void calc_beta(Node *n, double beta) {
   n->beta = 0.0;
   for (Path *path = n->rpath; path; path = path->rnext) {
-    n->beta = logsumexp(n->beta,
+    n->beta = (float)logsumexp(n->beta,
                         -beta * path->cost + path->rnode->beta,
                         path == n->rpath);
   }
@@ -159,9 +159,9 @@ bool Viterbi::forwardbackward(Lattice *lattice) {
 
   for (int pos = 0; pos <= static_cast<long>(len); ++pos) {
     for (Node *node = begin_node_list[pos]; node; node = node->bnext) {
-      node->prob = std::exp(node->alpha + node->beta - Z);
+      node->prob = (float)std::exp(node->alpha + node->beta - Z);
       for (Path *path = node->lpath; path; path = path->lnext) {
-        path->prob = std::exp(path->lnode->alpha
+        path->prob = (float)std::exp(path->lnode->alpha
                               - theta * path->cost
                               + path->rnode->beta - Z);
       }

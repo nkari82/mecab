@@ -396,8 +396,8 @@ bool Dictionary::compile(const Param &param,
       if (!node_format.empty()) {
         node.surface = w.c_str();
         node.feature = feature.c_str();
-        node.length  = w.size();
-        node.rlength = w.size();
+        node.length  = unsigned short(w.size());
+        node.rlength = unsigned short(w.size());
         node.posid   = pid;
         node.stat    = MECAB_NOR_NODE;
         lattice->set_sentence(w.c_str());
@@ -422,7 +422,7 @@ bool Dictionary::compile(const Param &param,
       token->rcAttr = rid;
       token->posid  = pid;
       token->wcost = cost;
-      token->feature = offset;
+      token->feature = (unsigned int)offset;
       token->compound = 0;
       dic.push_back(std::pair<std::string, Token*>(w, token));
 
@@ -457,7 +457,7 @@ bool Dictionary::compile(const Param &param,
     if (i != 0 && prev != dic[i].first) {
       str.push_back(dic[idx].first.c_str());
       len.push_back(dic[idx].first.size());
-      val.push_back(bsize +(idx << 8));
+      val.push_back(Darts::DoubleArray::result_type(bsize +(idx << 8)));
       bsize = 1;
       idx = i;
     } else {
@@ -467,7 +467,7 @@ bool Dictionary::compile(const Param &param,
   }
   str.push_back(dic[idx].first.c_str());
   len.push_back(dic[idx].first.size());
-  val.push_back(bsize +(idx << 8));
+  val.push_back(Darts::DoubleArray::result_type(bsize +(idx << 8)));
 
   CHECK_DIE(str.size() == len.size());
   CHECK_DIE(str.size() == val.size());
@@ -493,11 +493,11 @@ bool Dictionary::compile(const Param &param,
   }
 
   unsigned int dummy = 0;
-  unsigned int lsize = matrix.left_size();
-  unsigned int rsize = matrix.right_size();
-  unsigned int dsize = da.unit_size() * da.size();
-  unsigned int tsize = tbuf.size();
-  unsigned int fsize = fbuf.size();
+  unsigned int lsize = unsigned int(matrix.left_size());
+  unsigned int rsize = unsigned int(matrix.right_size());
+  unsigned int dsize = unsigned int(da.unit_size() * da.size());
+  unsigned int tsize = unsigned int(tbuf.size());
+  unsigned int fsize = unsigned int(fbuf.size());
 
   unsigned int version = DIC_VERSION;
   char charset[32];

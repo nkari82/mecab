@@ -316,9 +316,7 @@ bool load_dictionary_resource(Param *param, macab_io_file_t *io) {
 #if defined (HAVE_GETENV) && defined(_WIN32) && !defined(__CYGWIN__)
   if (rcfile.empty()) {
     scoped_fixed_array<wchar_t, BUF_SIZE> buf;
-    const DWORD len = ::GetEnvironmentVariableW(L"MECABRC",
-                                                buf.get(),
-                                                buf.size());
+    const DWORD len = ::GetEnvironmentVariableW(L"MECABRC",(LPWSTR)buf.get(),(DWORD)buf.size());
     if (len < buf.size() && len > 0) {
       rcfile = WideToUtf8(buf.get());
     }
@@ -329,7 +327,7 @@ bool load_dictionary_resource(Param *param, macab_io_file_t *io) {
   HKEY hKey;
   scoped_fixed_array<wchar_t, BUF_SIZE> v;
   DWORD vt;
-  DWORD size = v.size() * sizeof(v[0]);
+  DWORD size = DWORD(v.size() * sizeof(v[0]));
   DWORD qvres;
 
   if (rcfile.empty()) {
@@ -545,7 +543,7 @@ void MurmurHash3_x86_128(const void * key, const int len,
 uint64_t fingerprint(const char *str, size_t size) {
   uint64_t result[2] = { 0 };
   const uint32_t kFingerPrint32Seed = 0xfd14deff;
-  MurmurHash3_x86_128(str, size, kFingerPrint32Seed,
+  MurmurHash3_x86_128(str, (int)size, kFingerPrint32Seed,
                       reinterpret_cast<char *>(result));
   return result[0];
 }
