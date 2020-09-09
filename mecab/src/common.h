@@ -93,8 +93,6 @@
 #define WPATH(path) (path)
 #endif
 
-struct macab_io_file_t;
-
 namespace MeCab {
 class die {
  public:

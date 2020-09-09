@@ -6,10 +6,10 @@
 #include <fstream>
 #include <climits>
 #include "mecab.h"
+#include "common.h"
 #include "connector.h"
 #include "context_id.h"
 #include "char_property.h"
-#include "common.h"
 #include "dictionary.h"
 #include "dictionary_rewriter.h"
 #include "feature_index.h"

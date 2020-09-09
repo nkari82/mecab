@@ -8,7 +8,6 @@
 #include "mecab.h"
 #include "common.h"
 #include "connector.h"
-#include "mmap.h"
 #include "param.h"
 #include "utils.h"
 
@@ -21,26 +20,28 @@ bool Connector::open(const Param &param, macab_io_file_t *io) {
 }
 
 bool Connector::open(const char* filename, const char *mode, macab_io_file_t *io) {
-  CHECK_FALSE(cmmap_->open(filename, mode)) << "cannot open: " << filename;
-
-  matrix_ = cmmap_->begin();
+  close();
+  io_ = io ? *io : *default_io();
+  size_t length(0);
+  CHECK_FALSE(handle_ = io_.open(filename, mode, &length, (void**)&matrix_)) << "cannot open: " << filename;
+  length /= sizeof(short);
 
   CHECK_FALSE(matrix_) << "matrix is NULL" ;
-  CHECK_FALSE(cmmap_->size() >= 2) << "file size is invalid: " << filename;
+  CHECK_FALSE(length >= 2) << "file size is invalid: " << filename;
 
-  lsize_ = static_cast<unsigned short>((*cmmap_)[0]);
-  rsize_ = static_cast<unsigned short>((*cmmap_)[1]);
+  lsize_ = static_cast<unsigned short>(matrix_[0]);
+  rsize_ = static_cast<unsigned short>(matrix_[1]);
 
-  CHECK_FALSE(static_cast<size_t>(lsize_ * rsize_ + 2)
-                    == cmmap_->size())
+  CHECK_FALSE(static_cast<size_t>(lsize_ * rsize_ + 2) == length)
       << "file size is invalid: " << filename;
 
-  matrix_ = cmmap_->begin() + 2;
+  matrix_ += 2;
   return true;
 }
 
 void Connector::close() {
-  cmmap_->close();
+  if (io_.close != nullptr)
+	 io_.close(handle_);
 }
 
 bool Connector::openText(const char *filename) {

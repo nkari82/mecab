@@ -146,7 +146,7 @@ namespace MeCab {
 		return &io;
 	}
 
-	iobuf::iobuf(const char* file, macab_io_file_t *io) : io_(io), handle_(0)
+	iobuf::iobuf(const char* file, macab_io_file_t *io) : io_(io ? io : default_io()), handle_(0)
 	{
 		handle_ = io->open(file, "r", nullptr, nullptr);
 	}

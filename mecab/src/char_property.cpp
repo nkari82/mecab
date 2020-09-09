@@ -9,11 +9,10 @@
 #include <string>
 #include <sstream>
 #include "mecab.h"
-#include "char_property.h"
 #include "common.h"
-#include "mmap.h"
 #include "param.h"
 #include "utils.h"
+#include "char_property.h"
 
 namespace MeCab {
 
@@ -79,17 +78,21 @@ bool CharProperty::open(const Param &param, macab_io_file_t *io) {
 }
 
 bool CharProperty::open(const char *filename, macab_io_file_t *io) {
-  std::ostringstream error;
-  CHECK_FALSE(cmmap_->open(filename, "r"));
+  close();
+  io_ = io ? *io : *default_io();
 
-  const char *ptr = cmmap_->begin();
+  std::ostringstream error;
+  const char *ptr(nullptr);
+  size_t length(0);
+  CHECK_FALSE(handle_ = io_.open(filename, "r", &length, (void**)&ptr));
+
   unsigned int csize;
   read_static<unsigned int>(&ptr, csize);
 
   size_t fsize = sizeof(unsigned int) +
       (32 * csize) + sizeof(unsigned int) * 0xffff;
 
-  CHECK_FALSE(fsize == cmmap_->size())
+  CHECK_FALSE(fsize == length)
       << "invalid file size: " << filename;
 
   clist_.clear();
@@ -104,7 +107,8 @@ bool CharProperty::open(const char *filename, macab_io_file_t *io) {
 }
 
 void CharProperty::close() {
-  cmmap_->close();
+  if (io_.close != nullptr)
+	 io_.close(handle_);
 }
 
 size_t CharProperty::size() const { return clist_.size(); }

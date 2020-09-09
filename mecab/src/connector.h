@@ -6,17 +6,13 @@
 #ifndef MECAB_CONNECTOR_H_
 #define MECAB_CONNECTOR_H_
 
-#include "mecab.h"
-#include "mmap.h"
-#include "common.h"
-#include "scoped_ptr.h"
-
 namespace MeCab {
 class Param;
 
 class Connector {
  private:
-  scoped_ptr<Mmap<short> >  cmmap_;
+  macab_io_file_t io_;
+  file_handle_t    handle_;
   short          *matrix_;
   unsigned short  lsize_;
   unsigned short  rsize_;
@@ -58,8 +54,8 @@ class Connector {
 
   static bool compile(const char *, const char *);
 
-  explicit Connector():
-      cmmap_(new Mmap<short>), matrix_(0), lsize_(0), rsize_(0) {}
+  explicit Connector(): 
+	  io_{0}, handle_(0), matrix_(0), lsize_(0), rsize_(0) {}
 
   virtual ~Connector() { this->close(); }
 };

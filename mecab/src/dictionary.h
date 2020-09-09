@@ -81,7 +81,7 @@ class Dictionary {
 
  private:
   macab_io_file_t     io_;
-  file_handle_t         handle_;
+  file_handle_t        handle_;
   const Token        *token_;
   const char         *feature_;
   const char         *charset_;

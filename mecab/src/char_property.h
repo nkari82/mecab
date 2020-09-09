@@ -5,10 +5,8 @@
 #ifndef MECAB_CHARACTER_CATEGORY_H_
 #define MECAB_CHARACTER_CATEGORY_H_
 
-#include "mmap.h"
-#include "scoped_ptr.h"
-#include "ucs.h"
 #include "utils.h"
+#include "ucs.h"
 
 namespace MeCab {
 class Param;
@@ -78,11 +76,12 @@ class CharProperty {
 
   static bool compile(const char *, const char *, const char*);
 
-  CharProperty(): cmmap_(new Mmap<char>()), map_(0), charset_(0) {}
+  CharProperty(): io_{0}, handle_(0), map_(0), charset_(0) {}
   virtual ~CharProperty() { this->close(); }
 
  private:
-  scoped_ptr<Mmap<char>>   cmmap_;
+  macab_io_file_t io_;
+  file_handle_t    handle_;
   std::vector<const char *>  clist_;
   const CharInfo            *map_;
   int                        charset_;

@@ -1137,9 +1137,6 @@ int mecab_do(int argc, char **argv, macab_io_file_t *io) {
     return EXIT_FAILURE; }                      \
   while (0);
 
-  if (io == nullptr)
-	 io = MeCab::default_io();
-
   MeCab::Param param;
   if (!param.open(argc, argv, MeCab::long_options)) {
     std::cout << param.what() << std::endl;
