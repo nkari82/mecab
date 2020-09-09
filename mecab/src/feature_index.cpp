@@ -7,6 +7,7 @@
 #include <cstring>
 #include <fstream>
 #include <string>
+#include "mecab.h"
 #include "common.h"
 #include "feature_index.h"
 #include "param.h"

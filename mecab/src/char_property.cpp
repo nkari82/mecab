@@ -8,6 +8,7 @@
 #include <set>
 #include <string>
 #include <sstream>
+#include "mecab.h"
 #include "char_property.h"
 #include "common.h"
 #include "mmap.h"

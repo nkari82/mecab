@@ -5,6 +5,7 @@
 //  Copyright(C) 2004-2006 Nippon Telegraph and Telephone Corporation
 #include <cstdio>
 #include <cstring>
+#include "mecab.h"
 #include "common.h"
 #include "string_buffer.h"
 

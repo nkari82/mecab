@@ -33,8 +33,8 @@ class Connector {
   size_t left_size()  const { return static_cast<size_t>(lsize_); }
   size_t right_size() const { return static_cast<size_t>(rsize_); }
 
-  void set_left_size(size_t lsize)  { lsize_ = lsize; }
-  void set_right_size(size_t rsize) { rsize_ = rsize; }
+  void set_left_size(size_t lsize)  { lsize_ = (unsigned short)lsize; }
+  void set_right_size(size_t rsize) { rsize_ = (unsigned short)rsize; }
 
   inline int transition_cost(unsigned short rcAttr,
                              unsigned short lcAttr) const {

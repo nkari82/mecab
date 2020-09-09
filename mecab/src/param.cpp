@@ -15,14 +15,6 @@
 #include "config.h"
 #endif
 
-#ifdef ERROR
-#undef ERROR
-#endif
-
-#ifdef max
-#undef max
-#endif
-
 namespace MeCab {
 namespace {
 void init_param(std::string *help,

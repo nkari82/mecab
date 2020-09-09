@@ -6,8 +6,6 @@
 #ifndef MECAB_DICTIONARY_H_
 #define MECAB_DICTIONARY_H_
 
-#include "mecab.h"
-#include "mmap.h"
 #include "darts.h"
 #include "char_property.h"
 
@@ -77,12 +75,13 @@ class Dictionary {
 
   const char *what() { return what_.str(); }
 
-  explicit Dictionary(): dmmap_(nullptr), token_(0),
+  explicit Dictionary() : io_{0}, handle_(0), token_(0),
                          feature_(0), charset_(0) {}
   virtual ~Dictionary() { this->close(); }
 
  private:
-  scoped_ptr<Mmap<char> > dmmap_;
+  macab_io_file_t     io_;
+  file_handle_t         handle_;
   const Token        *token_;
   const char         *feature_;
   const char         *charset_;

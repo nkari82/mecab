@@ -11,10 +11,11 @@
 /*
 * File IO Mapper
 */
+typedef size_t file_handle_t;
 struct macab_io_file_t {
-	size_t(*open)(const char *path, const char *mode, void **mapped);
-	void(*close)(size_t handle);
-	size_t(*read)(size_t handle, char *buffer, size_t size);
+	file_handle_t(*open)(const char *path, const char *mode, size_t* length, void **mapped);
+	void(*close)(file_handle_t handle);
+	size_t(*read)(file_handle_t handle, char *buffer, size_t size);
 };
 
 /**
@@ -332,19 +333,10 @@ enum {
   MECAB_INSIDE_TOKEN = 2
 };
 
-/* C interface  */
-#ifdef __cplusplus
-#include <cstdio>
-#else
-#include <stdio.h>
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif
-
 #ifdef _WIN32
-#include <windows.h>
 #if !defined(MECAB_STATIC)
 #  ifdef DLL_EXPORT
 #    define MECAB_DLL_EXTERN  __declspec(dllexport)

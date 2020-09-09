@@ -7,6 +7,7 @@
 #include <cstring>
 #include <fstream>
 #include <iostream>
+#include "mecab.h"
 #include "common.h"
 #include "param.h"
 #include "string_buffer.h"

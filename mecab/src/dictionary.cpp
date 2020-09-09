@@ -5,6 +5,7 @@
 //  Copyright(C) 2004-2006 Nippon Telegraph and Telephone Corporation
 #include <fstream>
 #include <climits>
+#include "mecab.h"
 #include "connector.h"
 #include "context_id.h"
 #include "char_property.h"
@@ -13,7 +14,6 @@
 #include "dictionary_rewriter.h"
 #include "feature_index.h"
 #include "iconv_utils.h"
-#include "mmap.h"
 #include "param.h"
 #include "scoped_ptr.h"
 #include "utils.h"
@@ -75,15 +75,18 @@ struct pair_1st_cmp: public std::binary_function<bool, T1, T2> {
 
 bool Dictionary::open(const char *file, const char *mode, macab_io_file_t *io) {
   close();
+  io_ = io ? *io : *default_io();
   filename_.assign(file);
-  dmmap_.reset(new Mmap<char>(io));
-  CHECK_FALSE(dmmap_->open(file, mode))
-      << "no such file or directory: " << file;
+  const char *ptr(nullptr);
+  const char *end(nullptr);
+  size_t length(0);
+  CHECK_FALSE(handle_ = io_.open(file, mode, &length, (void**)&ptr))
+	  << "no such file or directory: " << file;
 
-  CHECK_FALSE(dmmap_->size() >= 100)
-      << "dictionary file is broken: " << file;
+  CHECK_FALSE(length >= 100)
+	  << "dictionary file is broken: " << file;
 
-  const char *ptr = dmmap_->begin();
+  end = ptr + length;
 
   unsigned int dsize;
   unsigned int tsize;
@@ -92,7 +95,7 @@ bool Dictionary::open(const char *file, const char *mode, macab_io_file_t *io) {
   unsigned int dummy;
 
   read_static<unsigned int>(&ptr, magic);
-  CHECK_FALSE((magic ^ DictionaryMagicID) == dmmap_->size())
+  CHECK_FALSE((magic ^ DictionaryMagicID) == length)
       << "dictionary file is broken: " << file;
 
   read_static<unsigned int>(&ptr, version_);
@@ -120,14 +123,15 @@ bool Dictionary::open(const char *file, const char *mode, macab_io_file_t *io) {
   feature_ = ptr;
   ptr += fsize;
 
-  CHECK_FALSE(ptr == dmmap_->end())
+  CHECK_FALSE(ptr == end)
       << "dictionary file is broken: " << file;
 
   return true;
 }
 
 void Dictionary::close() {
-  dmmap_.reset();
+  if (io_.close != nullptr)
+	 io_.close(handle_);
 }
 
 #define DCONF(file) create_filename(dicdir, std::string(file));

@@ -9,6 +9,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include "mecab.h"
 #include "common.h"
 #include "dictionary_rewriter.h"
 #include "iconv_utils.h"

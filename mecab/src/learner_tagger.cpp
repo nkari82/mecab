@@ -8,6 +8,7 @@
 #include <iostream>
 #include <iterator>
 #include <vector>
+#include "mecab.h"
 #include "common.h"
 #include "learner_node.h"
 #include "learner_tagger.h"

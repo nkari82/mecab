@@ -7,9 +7,9 @@
 #include <iterator>
 #include <cmath>
 #include <cstring>
+#include "mecab.h"
 #include "common.h"
 #include "connector.h"
-#include "mecab.h"
 #include "nbest_generator.h"
 #include "param.h"
 #include "viterbi.h"

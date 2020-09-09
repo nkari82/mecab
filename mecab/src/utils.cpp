@@ -31,8 +31,8 @@
 extern HINSTANCE DllInstance;
 #endif
 
-#include "common.h"
 #include "mecab.h"
+#include "common.h"
 #include "param.h"
 #include "utils.h"
 

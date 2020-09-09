@@ -6,9 +6,9 @@
 #include <cstring>
 #include <iostream>
 #include <iterator>
+#include "mecab.h"
 #include "common.h"
 #include "connector.h"
-#include "mecab.h"
 #include "nbest_generator.h"
 #include "param.h"
 #include "scoped_ptr.h"

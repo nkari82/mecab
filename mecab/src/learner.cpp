@@ -6,6 +6,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include "mecab.h"
 #include "common.h"
 #include "feature_index.h"
 #include "freelist.h"

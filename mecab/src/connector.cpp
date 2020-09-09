@@ -5,6 +5,7 @@
 //  Copyright(C) 2004-2006 Nippon Telegraph and Telephone Corporation
 #include <fstream>
 #include <sstream>
+#include "mecab.h"
 #include "common.h"
 #include "connector.h"
 #include "mmap.h"

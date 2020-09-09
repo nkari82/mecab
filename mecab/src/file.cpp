@@ -29,23 +29,26 @@ namespace MeCab {
 		HANDLE map;
 #else
 		int handle;
-		int flag;
 #endif
-		void*		view;
-		size_t      length;
+		int	mode;
+		void* view;
+		size_t length;
 		std::string path;
 	};
 
-	static std::unordered_map<size_t, file_t> s_files;
+	static std::unordered_map<file_handle_t, file_t> s_files;
 	static whatlog what_;
 
-	static size_t open(const char *path, const char *mode, void **mapped)
+	static file_handle_t open(const char *path, const char *mode, size_t* length, void **mapped)
 	{
 		if (!path) return 0;
 
-		assert(strcmp(mode, "r+") != 0);
+		bool read = !strcmp(mode, "r");
+		bool write = !strcmp(mode, "r+");
+		if(!read && !write)
+			CHECK_FALSE(false) << "unknown open mode:" << path;
 
-		size_t handle = (int)std::hash<std::string>{}(path);
+		file_handle_t handle = (file_handle_t)std::hash<std::string>{}(path);
 		if (s_files.find(handle) != s_files.end())
 			return 0;
 
@@ -53,25 +56,32 @@ namespace MeCab {
 		std::memset(&file, 0, sizeof(file));
 		file.path = path;
 #if defined(_WIN32) && !defined(__CYGWIN__)
-		file.handle = ::CreateFileW(WPATH_FORCE(path), GENERIC_READ, !mapped ? 0 : FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
-		if (file.handle == INVALID_HANDLE_VALUE)
+		file.mode = GENERIC_READ | (write ? GENERIC_WRITE : 0);
+		file.handle = ::CreateFileW(WPATH_FORCE(path), file.mode, !mapped ? 0 : FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+		if ( file.handle == INVALID_HANDLE_VALUE )
 			return 0;
+
 		file.length = ::GetFileSize(file.handle, 0);
+
 		if (mapped != nullptr)
 		{
-			file.map = ::CreateFileMapping(file.handle, 0, PAGE_READONLY, 0, 0, 0);
-			*mapped = file.view = ::MapViewOfFile(file.map, FILE_MAP_READ, 0, 0, 0);
+			file.map = ::CreateFileMapping(file.handle, 0, write ? PAGE_READWRITE : PAGE_READONLY, 0, 0, 0);
+			*mapped = file.view = ::MapViewOfFile(file.map, write ? FILE_MAP_ALL_ACCESS : FILE_MAP_READ, 0, 0, 0);
 		}
 #else
-		file.handle = ::open(path, O_RDONLY | O_BINARY);
+		file.mode = (write ? O_RDWR : O_RDONLY) | O_BINARY;
+		file.handle = ::open(path, file.mode);
+		if (file.handle == 0)
+			return 0;
+
 		struct stat st;
-		::fstat(file.handle, &st)
-			file.length = st.st_size;
+		::fstat(file.handle, &st);
+		file.length = st.st_size;
 
 		if (mapped != nullptr)
 		{
 #ifdef HAVE_MMAP
-			file.view = ::mmap(0, file.length, PROT_READ, MAP_SHARED, file.handle, 0);
+			file.view = ::mmap(0, file.length, PROT_READ | (write ? PROT_WRITE : 0), MAP_SHARED, file.handle, 0);
 #else
 			file.view = malloc(file.length);
 			::read(file.handle, file.view, file.length);
@@ -79,11 +89,14 @@ namespace MeCab {
 #endif
 		}
 #endif
+		if (length != nullptr)
+			*length = file.length;
+
 		s_files.insert(s_files.end(), std::make_pair(handle, file));
 		return handle;
 	}
 
-	static void close(size_t handle)
+	static void close(file_handle_t handle)
 	{
 		auto it = s_files.find(handle);
 		if (it == s_files.end())
@@ -100,6 +113,9 @@ namespace MeCab {
 #ifdef HAVE_MMAP
 			::munmap(file.view, file.length);
 #else
+			if (file.mode & O_RDWR) {
+				::write(file.handle, file.view, file.length);
+			}
 			free(file.view);
 #endif
 		}
@@ -108,7 +124,7 @@ namespace MeCab {
 		s_files.erase(it);
 	}
 
-	static size_t read(size_t handle, char *buffer, size_t size)
+	static size_t read(file_handle_t handle, char *buffer, size_t size)
 	{
 		auto it = s_files.find(handle);
 		if (it == s_files.end())
@@ -116,13 +132,13 @@ namespace MeCab {
 
 		auto& file = it->second;
 		
+		size_t read(0);
 #if defined(_WIN32) && !defined(__CYGWIN__)
-		DWORD read(0);
-		ReadFile(file.handle, buffer, size, &read, nullptr);
+		ReadFile(file.handle, buffer, (DWORD)size, (DWORD*)&read, nullptr);
 #else
-		int read = ::read(file.handle, buffer, size);
+		read = ::read(file.handle, buffer, size);
 #endif
-		return (size_t)read;
+		return read;
 	}
 
 	macab_io_file_t* default_io() {
@@ -130,10 +146,9 @@ namespace MeCab {
 		return &io;
 	}
 
-
 	iobuf::iobuf(const char* file, macab_io_file_t *io) : io_(io), handle_(0)
 	{
-		handle_ = io->open(file, "r", nullptr);
+		handle_ = io->open(file, "r", nullptr, nullptr);
 	}
 
 	iobuf::~iobuf()

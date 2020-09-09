@@ -6,12 +6,12 @@
 #include <map>
 #include <vector>
 #include <string>
+#include "mecab.h"
 #include "char_property.h"
 #include "connector.h"
 #include "dictionary.h"
 #include "dictionary_rewriter.h"
 #include "feature_index.h"
-#include "mecab.h"
 #include "param.h"
 
 #ifdef HAVE_CONFIG_H

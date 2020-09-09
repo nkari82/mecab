@@ -7,6 +7,7 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include "mecab.h"
 #include "common.h"
 #include "scoped_ptr.h"
 #include "utils.h"

@@ -8,8 +8,8 @@
 #include <iostream>
 #include <map>
 #include <vector>
-#include "common.h"
 #include "mecab.h"
+#include "common.h"
 #include "param.h"
 #include "stream_wrapper.h"
 #include "scoped_ptr.h"
