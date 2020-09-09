@@ -86,7 +86,7 @@ class Eval {
   }
 
  public:
-  static bool eval(int argc, char **argv) {
+  static int eval(int argc, char **argv) {
     static const MeCab::Option long_options[] = {
       { "level",  'l',  "0 -1",    "STR",    "set level of evaluations" },
       { "output", 'o',  0,         "FILE",   "set the output file name" },

@@ -9,26 +9,32 @@
 #include <vector>
 #include <string>
 #include "mecab.h"
-#include "char_property.h"
 #include "common.h"
-#include "context_id.h"
-#include "dictionary.h"
-#include "dictionary_rewriter.h"
-#include "feature_index.h"
-#include "mmap.h"
 #include "param.h"
 #include "utils.h"
+#include "string_buffer.h"
+#include "freelist.h"
+#include "dictionary_rewriter.h"
+#include "learner_node.h"
+#include "feature_index.h"
+#include "char_property.h"
+#include "context_id.h"
+#include "dictionary.h"
 
 namespace MeCab {
 
 void copy(const char *src, const char *dst) {
   std::cout << "copying " << src << " to " <<  dst << std::endl;
-  Mmap<char> mmap;
-  CHECK_DIE(mmap.open(src, "r")) << mmap.what();
+  macab_io_file_t* io = default_io();
+  file_handle_t handle(0);
+  size_t length(0);
+  const char *ptr(nullptr);
+  CHECK_DIE((handle = io->open(src, "r", &length, (void**)&ptr))) << default_io_what();
   std::ofstream ofs(WPATH(dst), std::ios::binary|std::ios::out);
   CHECK_DIE(ofs) << "permission denied: " << dst;
-  ofs.write(reinterpret_cast<char*>(mmap.begin()), mmap.size());
+  ofs.write(ptr, length);
   ofs.close();
+  io->close(handle);
 }
 
 class DictionaryGenerator {

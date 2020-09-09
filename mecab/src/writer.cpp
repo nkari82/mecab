@@ -141,7 +141,7 @@ bool Writer::writeNone(Lattice *lattice, StringBuffer *os) const {
 }
 
 bool Writer::writeEM(Lattice *lattice, StringBuffer *os) const {
-  static const float min_prob = 0.0001;
+  static const float min_prob = 0.0001f;
   for (const Node *node = lattice->bos_node(); node; node = node->next) {
     if (node->prob >= min_prob) {
       *os << "U\t";

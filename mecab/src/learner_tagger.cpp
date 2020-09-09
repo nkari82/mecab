@@ -10,9 +10,11 @@
 #include <vector>
 #include "mecab.h"
 #include "common.h"
+#include "utils.h"
+#include "string_buffer.h"
+#include "dictionary_rewriter.h"
 #include "learner_node.h"
 #include "learner_tagger.h"
-#include "utils.h"
 
 namespace MeCab {
 namespace {

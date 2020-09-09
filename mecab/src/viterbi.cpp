@@ -9,13 +9,16 @@
 #include <cstring>
 #include "mecab.h"
 #include "common.h"
-#include "connector.h"
-#include "nbest_generator.h"
-#include "param.h"
-#include "viterbi.h"
 #include "scoped_ptr.h"
+#include "freelist.h"
+#include "learner_node.h"
 #include "string_buffer.h"
+#include "dictionary_rewriter.h"
+#include "param.h"
 #include "tokenizer.h"
+#include "nbest_generator.h"
+#include "connector.h"
+#include "viterbi.h"
 
 namespace MeCab {
 
@@ -391,7 +394,7 @@ bool Viterbi::viterbi(Lattice *lattice) const {
   eos_node->surface = lattice->sentence() + lattice->size();
   begin_node_list[lattice->size()] = eos_node;
 
-  for (long pos = len; static_cast<long>(pos) >= 0; --pos) {
+  for (long pos = (long)len; static_cast<long>(pos) >= 0; --pos) {
     if (end_node_list[pos]) {
       if (!connect<IsAllPath>(pos, eos_node,
                               begin_node_list,

@@ -332,7 +332,7 @@ double mecab_lattice_get_theta(mecab_lattice_t *lattice) {
 }
 
 void mecab_lattice_set_theta(mecab_lattice_t *lattice, double theta) {
-  reinterpret_cast<MeCab::Lattice *>(lattice)->set_theta(theta);
+  reinterpret_cast<MeCab::Lattice *>(lattice)->set_theta((float)theta);
 }
 
 int mecab_lattice_next(mecab_lattice_t *lattice) {

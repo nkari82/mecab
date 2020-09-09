@@ -7,6 +7,11 @@
 #include <climits>
 #include "mecab.h"
 #include "common.h"
+#include "freelist.h"
+#include "learner_node.h"
+#include "string_buffer.h"
+//#include "scoped_ptr.h"
+#include "utils.h"
 #include "connector.h"
 #include "context_id.h"
 #include "char_property.h"
@@ -15,8 +20,7 @@
 #include "feature_index.h"
 #include "iconv_utils.h"
 #include "param.h"
-#include "scoped_ptr.h"
-#include "utils.h"
+
 #include "writer.h"
 
 namespace MeCab {

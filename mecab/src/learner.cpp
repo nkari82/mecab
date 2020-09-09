@@ -8,14 +8,16 @@
 #include <vector>
 #include "mecab.h"
 #include "common.h"
-#include "feature_index.h"
-#include "freelist.h"
-#include "lbfgs.h"
-#include "learner_tagger.h"
-#include "param.h"
-#include "string_buffer.h"
 #include "thread.h"
 #include "utils.h"
+#include "param.h"
+#include "freelist.h"
+#include "learner_node.h"
+#include "string_buffer.h"
+#include "dictionary_rewriter.h"
+#include "lbfgs.h"
+#include "learner_tagger.h"
+#include "feature_index.h"
 
 namespace MeCab {
 namespace {

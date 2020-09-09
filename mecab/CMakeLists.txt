@@ -106,7 +106,7 @@ add_definitions( -DHAVE_CONFIG_H
 					 -DDIC_VERSION=102
 					 -DVERSION="0.996"
 					 -DPACKAGE="mecab"
-					 -DMECAB_DEFAULT_RC="")	
+					 -DMECAB_DEFAULT_RC="mecabrc")	
 if(MSVC)
 add_definitions (-D_CRT_SECURE_NO_DEPRECATE)
 endif()
@@ -161,4 +161,4 @@ target_link_libraries (mecab-system-eval LINK_PUBLIC ${ADDITIONAL_LIBRARIES})
 
 add_executable (mecab-test-gen src/mecab-dict-index.cpp)
 target_include_directories(mecab-test-gen PRIVATE ./src)
-target_link_libraries (mecab-test-gen LINK_PUBLIC ${ADDTIONAL_LIBRARIRES})
+target_link_libraries (mecab-test-gen LINK_PUBLIC ${ADDITIONAL_LIBRARIES})

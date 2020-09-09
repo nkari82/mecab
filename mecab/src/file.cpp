@@ -58,21 +58,19 @@ namespace MeCab {
 #if defined(_WIN32) && !defined(__CYGWIN__)
 		file.mode = GENERIC_READ | (write ? GENERIC_WRITE : 0);
 		file.handle = ::CreateFileW(WPATH_FORCE(path), file.mode, !mapped ? 0 : FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
-		if ( file.handle == INVALID_HANDLE_VALUE )
-			return 0;
+		CHECK_FALSE(file.handle != INVALID_HANDLE_VALUE) << "CreateFile() failed: " << path;
 
 		file.length = ::GetFileSize(file.handle, 0);
-
 		if (mapped != nullptr)
 		{
 			file.map = ::CreateFileMapping(file.handle, 0, write ? PAGE_READWRITE : PAGE_READONLY, 0, 0, 0);
+			CHECK_FALSE(file.map) << "CreateFileMapping() failed: " << path;
 			*mapped = file.view = ::MapViewOfFile(file.map, write ? FILE_MAP_ALL_ACCESS : FILE_MAP_READ, 0, 0, 0);
+			CHECK_FALSE(file.view) << "MapViewOfFile() failed: " << path;
 		}
 #else
 		file.mode = (write ? O_RDWR : O_RDONLY) | O_BINARY;
-		file.handle = ::open(path, file.mode);
-		if (file.handle == 0)
-			return 0;
+		CHECK_FALSE((file.handle = ::open(path, file.mode)) >= 0) << "open failed: " << path;
 
 		struct stat st;
 		::fstat(file.handle, &st);
@@ -81,10 +79,11 @@ namespace MeCab {
 		if (mapped != nullptr)
 		{
 #ifdef HAVE_MMAP
-			file.view = ::mmap(0, file.length, PROT_READ | (write ? PROT_WRITE : 0), MAP_SHARED, file.handle, 0);
+			CHECK_FALSE((file.view = ::mmap(0, file.length, PROT_READ | (write ? PROT_WRITE : 0), MAP_SHARED, file.handle, 0)) != MAP_FAILED)
+				<< "mmap() failed: " << path;
 #else
 			file.view = malloc(file.length);
-			::read(file.handle, file.view, file.length);
+			CHECK_FALSE(::read(file.handle, file.view, file.length) >= 0) << "read() failed: " << path;
 			*mapped = file.view;
 #endif
 		}
@@ -144,6 +143,10 @@ namespace MeCab {
 	macab_io_file_t* default_io() {
 		static macab_io_file_t io{ open, close, read };
 		return &io;
+	}
+
+	const char* default_io_what() {
+		return what_.str();
 	}
 
 	iobuf::iobuf(const char* file, macab_io_file_t *io) : io_(io ? io : default_io()), handle_(0)

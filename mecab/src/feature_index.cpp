@@ -9,13 +9,13 @@
 #include <string>
 #include "mecab.h"
 #include "common.h"
-#include "feature_index.h"
+#include "utils.h"
+#include "learner_node.h"
+#include "string_buffer.h"
+#include "dictionary_rewriter.h"
 #include "param.h"
 #include "iconv_utils.h"
-#include "learner_node.h"
-#include "scoped_ptr.h"
-#include "string_buffer.h"
-#include "utils.h"
+#include "feature_index.h"
 
 #define BUFSIZE (2048)
 #define POSSIZE (64)
@@ -155,10 +155,14 @@ bool DecoderFeatureIndex::openFromArray(const char *begin, const char *end) {
 }
 
 bool DecoderFeatureIndex::openBinaryModel(const Param &param) {
+  io_ = *default_io();
   const std::string modelfile = param.get<std::string>("model");
-  CHECK_DIE(mmap_.open(modelfile.c_str(), "r")) << mmap_.what();
-  if (!openFromArray(mmap_.begin(), mmap_.end())) {
-    mmap_.close();
+  const char *ptr(nullptr);
+  size_t length(0);
+  CHECK_DIE((handle_ = io_.open(modelfile.c_str(), "r", &length, (void**)&ptr))) << default_io_what();
+
+  if (!openFromArray(ptr, ptr + length)) {
+	io_.close(handle_);
     return false;
   }
   const std::string to = param.get<std::string>("charset");
@@ -196,7 +200,8 @@ void EncoderFeatureIndex::close() {
 }
 
 void DecoderFeatureIndex::close() {
-  mmap_.close();
+  if (io_.close != nullptr)
+	 io_.close(handle_);
   model_buffer_.clear();
   maxid_ = 0;
 }
