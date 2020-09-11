@@ -73,7 +73,7 @@ int main()
   return 0;
 }" HAVE_TLS_KEYWORD)
 
-option(BUILD_STATIC "Build static library" ON)
+option(BUILD_SHARED_LIBS "Build shared library" OFF)
 
 set(SOURCES src/feature_index.cpp
 	src/param.cpp
@@ -112,11 +112,11 @@ add_definitions (-D_CRT_SECURE_NO_DEPRECATE)
 endif()
 
 set(ADDITIONAL_LIBRARIES libmecab)
-if (BUILD_STATIC)
+if (BUILD_SHARED_LIBS)
+	add_library(libmecab SHARED ${SOURCES})
+else()
 	add_definitions( -DMECAB_STATIC )
 	add_library(libmecab STATIC ${SOURCES})
-else()
-	add_library(libmecab SHARED ${SOURCES})
 endif()
 
 if(Iconv_FOUND)
@@ -130,10 +130,10 @@ if(Iconv_FOUND)
 	endif()
 	
 	target_include_directories(libmecab PRIVATE ./src ./ ${Iconv_INCLUDE_DIR})
-	if (BUILD_STATIC)
-		set(ADDITIONAL_LIBRARIES ${ADDITIONAL_LIBRARIES} ${Iconv_LIBRARIES})
-	else()
+	if (BUILD_SHARED_LIBS)
 		target_link_libraries (libmecab LINK_PUBLIC ${Iconv_LIBRARIES})
+	else()
+		set(ADDITIONAL_LIBRARIES ${ADDITIONAL_LIBRARIES} ${Iconv_LIBRARIES})
 	endif()
 else()
 	target_include_directories(libmecab PRIVATE ./src ./)
