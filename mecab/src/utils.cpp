@@ -107,10 +107,12 @@ std::string create_filename(const std::string &path,
                             const std::string &file) {
   std::string s = path;
   if (s.size()) {
-    if (s[s.size() - 1] != '\\')
-	  s += '\\';
-	else if (s[s.size() - 1] != '/')
+	if (s[s.size() - 1] != '/')
 	  s += '/';
+#if defined(_WIN32) && !defined(__CYGWIN__)
+    else if (s[s.size() - 1] != '\\')
+	  s += '\\';
+#endif	
   }
   s += file;
   return s;
@@ -120,7 +122,11 @@ void remove_filename(std::string *s) {
   int len = static_cast<int>(s->size()) - 1;
   bool ok = false;
   for (; len >= 0; --len) {
-    if ((*s)[len] == '\\' || (*s)[len] == '/') {
+    if ((*s)[len] == '/'
+#if defined(_WIN32) && !defined(__CYGWIN__)
+		|| (*s)[len] == '\\'
+#endif	
+	) {
       ok = true;
       break;
     }
@@ -135,7 +141,11 @@ void remove_pathname(std::string *s) {
   int len = static_cast<int>(s->size()) - 1;
   bool ok = false;
   for (; len >= 0; --len) {
-    if ((*s)[len] == '\\' || (*s)[len] == '/') {
+    if ((*s)[len] == '/'
+#if defined(_WIN32) && !defined(__CYGWIN__)
+		|| (*s)[len] == '\\'
+#endif	
+	) {
       ok = true;
       break;
     }
