@@ -374,7 +374,7 @@ extern "C" {
   /**
    * C wrapper of MeCab::Tagger::create(arg)
    */
-  MECAB_DLL_EXTERN mecab_t*      mecab_new2(const char *arg);
+  MECAB_DLL_EXTERN mecab_t*      mecab_new2(const char *arg, macab_io_file_t *io = nullptr);
 
   /**
    * C wrapper of MeCab::Tagger::version()
@@ -1456,7 +1456,7 @@ MECAB_DLL_EXTERN Model       *createModel(int argc, char **argv);
 /**
  * Alias of Mode::create(arg)
  */
-MECAB_DLL_EXTERN Model       *createModel(const char *arg);
+MECAB_DLL_EXTERN Model       *createModel(const char *arg, macab_io_file_t *io = nullptr);
 
 /**
  * Alias of Tagger::create(argc, argv)
@@ -1466,7 +1466,7 @@ MECAB_DLL_EXTERN Tagger      *createTagger(int argc, char **argv);
 /**
  * Alias of Tagger::create(arg)
  */
-MECAB_DLL_EXTERN Tagger      *createTagger(const char *arg);
+MECAB_DLL_EXTERN Tagger      *createTagger(const char *arg, macab_io_file_t *io = nullptr);
 
 /**
  * delete Lattice object.

@@ -82,7 +82,7 @@ class ModelImpl: public Model {
   virtual ~ModelImpl();
 
   bool open(int argc, char **argv);
-  bool open(const char *arg);
+  bool open(const char *arg, macab_io_file_t *io);
   bool open(const Param &param, macab_io_file_t *io);
 
   bool swap(Model *model);
@@ -155,7 +155,7 @@ class ModelImpl: public Model {
 class TaggerImpl: public Tagger {
  public:
   bool                  open(int argc, char **argv);
-  bool                  open(const char *arg);
+  bool                  open(const char *arg, macab_io_file_t *io);
   bool                  open(const ModelImpl &model);
 
   bool                  parse(Lattice *lattice) const;
@@ -355,14 +355,14 @@ bool ModelImpl::open(int argc, char **argv) {
   return open(param, nullptr);
 }
 
-bool ModelImpl::open(const char *arg) {
+bool ModelImpl::open(const char *arg, macab_io_file_t *io) {
   Param param;
   if (!param.open(arg, long_options) ||
       !load_dictionary_resource(&param)) {
     setGlobalError(param.what());
     return false;
   }
-  return open(param, nullptr);
+  return open(param, io);
 }
 
 bool ModelImpl::open(const Param &param, macab_io_file_t *io) {
@@ -465,9 +465,9 @@ bool TaggerImpl::open(int argc, char **argv) {
   return true;
 }
 
-bool TaggerImpl::open(const char *arg) {
+bool TaggerImpl::open(const char *arg, macab_io_file_t *io) {
   model_.reset(new ModelImpl);
-  if (!model_->open(arg)) {
+  if (!model_->open(arg, io)) {
     model_.reset(0);
     return false;
   }
@@ -1057,9 +1057,9 @@ Tagger *createTagger(int argc, char **argv) {
   return tagger;
 }
 
-Tagger *createTagger(const char *argv) {
+Tagger *createTagger(const char *argv, macab_io_file_t *io) {
   TaggerImpl *tagger = new TaggerImpl();
-  if (!tagger->open(argv)) {
+  if (!tagger->open(argv, io)) {
     setGlobalError(tagger->what());
     delete tagger;
     return 0;
@@ -1088,9 +1088,9 @@ Model *createModel(int argc, char **argv) {
   return model;
 }
 
-Model *createModel(const char *arg) {
+Model *createModel(const char *arg, macab_io_file_t *io) {
   ModelImpl *model = new ModelImpl;
-  if (!model->open(arg)) {
+  if (!model->open(arg, io)) {
     delete model;
     return 0;
   }
