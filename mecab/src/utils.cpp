@@ -106,11 +106,12 @@ int decode_charset(const char *charset) {
 std::string create_filename(const std::string &path,
                             const std::string &file) {
   std::string s = path;
-#if defined(_WIN32) && !defined(__CYGWIN__)
-  if (s.size() && s[s.size()-1] != '\\') s += '\\';
-#else
-  if (s.size() && s[s.size()-1] != '/') s += '/';
-#endif
+  if (s.size()) {
+    if (s[s.size() - 1] != '\\')
+	  s += '\\';
+	else if (s[s.size() - 1] != '/')
+	  s += '/';
+  }
   s += file;
   return s;
 }
@@ -119,17 +120,10 @@ void remove_filename(std::string *s) {
   int len = static_cast<int>(s->size()) - 1;
   bool ok = false;
   for (; len >= 0; --len) {
-#if defined(_WIN32) && !defined(__CYGWIN__)
-    if ((*s)[len] == '\\') {
+    if ((*s)[len] == '\\' || (*s)[len] == '/') {
       ok = true;
       break;
     }
-#else
-    if ((*s)[len] == '/')  {
-      ok = true;
-      break;
-    }
-#endif
   }
   if (ok)
     *s = s->substr(0, len);
@@ -141,17 +135,10 @@ void remove_pathname(std::string *s) {
   int len = static_cast<int>(s->size()) - 1;
   bool ok = false;
   for (; len >= 0; --len) {
-#if defined(_WIN32) && !defined(__CYGWIN__)
-    if ((*s)[len] == '\\') {
+    if ((*s)[len] == '\\' || (*s)[len] == '/') {
       ok = true;
       break;
     }
-#else
-    if ((*s)[len] == '/')  {
-      ok = true;
-      break;
-    }
-#endif
   }
   if (ok)
     *s = s->substr(len + 1, s->size() - len);
