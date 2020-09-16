@@ -10,7 +10,6 @@
 #include "freelist.h"
 #include "learner_node.h"
 #include "string_buffer.h"
-//#include "scoped_ptr.h"
 #include "utils.h"
 #include "connector.h"
 #include "context_id.h"
@@ -118,7 +117,6 @@ bool Dictionary::open(const char *file, const char *mode, macab_io_file_t *io) {
   charset_ = ptr;
   ptr += 32;
   da_.set_array(reinterpret_cast<void *>(const_cast<char*>(ptr)));
-
   ptr += dsize;
 
   token_ = reinterpret_cast<const Token *>(ptr);
@@ -227,6 +225,11 @@ bool Dictionary::assignUserDictionaryCosts(
   }
 
   return true;
+}
+
+const char *Dictionary::feature(const Token &t) const
+{
+	return feature_ + t.feature;
 }
 
 bool Dictionary::compile(const Param &param,

@@ -61,7 +61,7 @@ class Dictionary {
     return token_ +(n.value >> 8);
   }
   size_t token_size(const result_type &n) const { return 0xff & n.value; }
-  const char  *feature(const Token &t) const { return feature_ + t.feature; }
+  const char *feature(const Token &t) const;
 
   static bool compile(const Param &param,
                       const std::vector<std::string> &dics,
