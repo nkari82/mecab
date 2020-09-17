@@ -73,8 +73,12 @@ class Dictionary {
 
   const char *what() { return what_.str(); }
 
-  explicit Dictionary() : io_{0}, handle_(0), token_(0),
-                         feature_(0), charset_(0) {}
+  explicit Dictionary() 
+	  : io_{0}
+	  , handle_(0)
+	  , token_(0)
+	  , feature_(0)
+	  , charset_{0} {}
   virtual ~Dictionary() { this->close(); }
 
  private:
@@ -82,7 +86,7 @@ class Dictionary {
   file_handle_t        handle_;
   IMMap::Ptr			token_;
   IMMap::Ptr			feature_;
-  const char         *charset_;
+  const char         charset_[32];
   unsigned int        version_;
   unsigned int        type_;
   unsigned int        lexsize_;

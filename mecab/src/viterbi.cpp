@@ -7,6 +7,7 @@
 #include <iterator>
 #include <cmath>
 #include <cstring>
+#include <unordered_map>
 #include "mecab.h"
 #include "common.h"
 #include "freelist.h"

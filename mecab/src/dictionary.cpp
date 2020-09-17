@@ -6,6 +6,7 @@
 #include <fstream>
 #include <climits>
 #include <array>
+#include <unordered_map>
 #include "mecab.h"
 #include "common.h"
 #include "freelist.h"
@@ -112,9 +113,7 @@ bool Dictionary::open(const char *file, const char *mode, macab_io_file_t *io) {
   ptr->read(&tsize, sizeof(unsigned int));
   ptr->read(&fsize, sizeof(unsigned int));
   ptr->read(&dummy, sizeof(unsigned int));
-
-  charset_ = (const char*)ptr->data();
-  *ptr += 32;
+  ptr->read((void*)charset_, 32);
   da_.set_array(reinterpret_cast<void *>(ptr->data()));
   *ptr += dsize;
 

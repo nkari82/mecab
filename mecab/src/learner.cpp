@@ -6,6 +6,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <unordered_map>
 #include "mecab.h"
 #include "common.h"
 #include "thread.h"

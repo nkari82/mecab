@@ -208,6 +208,17 @@ private:
 
 class FileMap : public IMMap
 {
+private:
+	std::unordered_map<size_t, char*> map_;
+	file_handle_t handle_;
+	size_t pos_;
+
+private:
+	char* op_index(size_t offset, size_t stride) override
+	{ 
+		auto pos = pos_ + (offset * stride);
+		return nullptr; 
+	}
 };
 }  // MeCab
 

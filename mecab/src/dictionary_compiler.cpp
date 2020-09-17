@@ -6,6 +6,7 @@
 #include <map>
 #include <vector>
 #include <string>
+#include <unordered_map>
 #include "mecab.h"
 #include "param.h"
 #include "utils.h"

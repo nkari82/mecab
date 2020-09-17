@@ -7,6 +7,7 @@
 #include <windows.h>
 #endif
 
+#include <unordered_map>
 #include "mecab.h"
 #include "tokenizer.h"
 #include "utils.h"

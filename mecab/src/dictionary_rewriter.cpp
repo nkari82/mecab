@@ -10,6 +10,7 @@
 #include <string>
 #include <vector>
 #include <array>
+#include <unordered_map>
 #include "mecab.h"
 #include "common.h"
 #include "dictionary_rewriter.h"

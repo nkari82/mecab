@@ -9,6 +9,7 @@
 #include <map>
 #include <vector>
 #include <array>
+#include <unordered_map>
 #include "mecab.h"
 #include "common.h"
 #include "param.h"

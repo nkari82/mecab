@@ -7,6 +7,7 @@
 #include <iostream>
 #include <iterator>
 #include <array>
+#include <unordered_map>
 #include "mecab.h"
 #include "common.h"
 #include "connector.h"
