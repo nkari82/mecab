@@ -202,7 +202,8 @@ namespace MeCab {
 		: io_(io)
 		, handle_(handle)
 		, size_(size)
-		, pos_(pos)
+		, relative_(0)
+		, orig_(pos)
 	{}
 
 	FileMap::~FileMap()
@@ -214,31 +215,31 @@ namespace MeCab {
 	char* FileMap::data(size_t size)
 	{
 		char* val(nullptr);
-		read(pos_, (void**)&val, size);
+		read(orig_ + relative_, (void**)&val, size);
 		return val;
 	}
 
 	char* FileMap::data()
 	{
 		char* val(nullptr);
-		read(pos_, (void**)&val, size_ - pos_);
+		read(orig_ + relative_, (void**)&val, size_ - relative_);
 		return val;
 	}
 
 	void FileMap::read(void* val, size_t size)
 	{
 		io_->read(handle_, (char*)val, size);
-		pos_ += (int)size;
+		relative_ += (int)size;
 	}
 
 	void FileMap::read(int offset, void** val, size_t size)
 	{
-		auto pos = pos_ + offset;
+		auto pos = relative_ + offset;
 		auto it = mmap_.find(pos);
 		if (it == mmap_.end())
 		{
 			*val = new char[size];
-			io_->seek(handle_, pos);
+			io_->seek(handle_, orig_ + pos);
 			io_->read(handle_, (char*)*val, size);
 			mmap_.emplace(std::make_pair(offset, (char*)*val));
 		}
@@ -250,11 +251,11 @@ namespace MeCab {
 
 	void FileMap::read(int offset, char** str)
 	{
-		auto pos = pos_ + offset;
+		auto pos = relative_ + offset;
 		auto it = mmap_.find(pos);
 		if (it == mmap_.end())
 		{
-			io_->seek(handle_, pos);
+			io_->seek(handle_, orig_ + pos);
 
 			char temp[512];
 			size_t len(0);
@@ -275,18 +276,65 @@ namespace MeCab {
 
 	IMMap::Ptr FileMap::clone()
 	{
-		return std::make_shared<FileMap>(io_, handle_, size_ - pos_, pos_);	// bug
+		return std::make_shared<FileMap>(io_, handle_, size_ - relative_, orig_ + relative_);
 	}
 
 	char* FileMap::op_index(int offset, size_t stride)
 	{
 		char* val(nullptr);
-		read(int(offset * stride), (void**)&val, stride);
+		read(orig_ + int(offset * stride), (void**)&val, stride);
 		return val;
 	}
 
 	void FileMap::op_add(int offset, size_t stride)
 	{
-		pos_ += int(offset * stride);
+		relative_ += int(offset * stride);
+	}
+
+	MMap::MMap(void* ptr, size_t size) 
+		: relative_(0)
+		, orig_((char*)ptr)
+		, size_(size)
+	{}
+
+	char* MMap::data()
+	{
+		return orig_ + relative_;
+	}
+
+	char* MMap::data(size_t size)
+	{
+		return orig_ + relative_;
+	}
+
+	void MMap::read(void* val, size_t size)
+	{
+		std::memcpy(val, orig_ + relative_, size);
+		relative_ += (int)size;
+	}
+
+	void MMap::read(int offset, void** val, size_t size)
+	{
+		*val = (orig_ + relative_ + offset);
+	}
+
+	void MMap::read(int offset, char** str)
+	{
+		*str = (orig_ + relative_ + offset);
+	}
+
+	IMMap::Ptr MMap::clone()
+	{
+		return std::make_shared<MMap>(orig_ + relative_, size_ - relative_);
+	}
+
+	char* MMap::op_index(int offset, size_t stride)
+	{
+		return orig_ + relative_ + (offset * stride);
+	}
+
+	void MMap::op_add(int offset, size_t stride)
+	{
+		relative_ += int(offset * stride);
 	}
 }

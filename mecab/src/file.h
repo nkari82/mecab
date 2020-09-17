@@ -49,24 +49,23 @@ namespace MeCab {
 	class MMap : public IMMap
 	{
 	private:
-		char* ptr_;
+		int relative_;
 		char* orig_;
 		size_t size_;
 
 	public:
-		MMap(void* ptr, size_t size) : ptr_((char*)ptr), orig_((char*)ptr), size_(size)
-		{}
+		MMap(void* ptr, size_t size);
 
-		char* data() override { return ptr_; }
-		char* data(size_t size) override { return ptr_; }
-		void read(void* val, size_t size) override { std::memcpy(val, ptr_, size); ptr_ += size; }
-		void read(int offset, void** val, size_t size) override { *val = (ptr_ + offset); }
-		void read(int offset, char** str) override { *str = (ptr_ + offset); }
-		Ptr clone() override { return std::make_shared<MMap>(ptr_, size_ - (ptr_ - orig_)); }
+		char* data() override;
+		char* data(size_t size) override;
+		void read(void* val, size_t size) override;
+		void read(int offset, void** val, size_t size) override;
+		void read(int offset, char** str) override;
+		Ptr clone() override;
 
 	private:
-		char* op_index(int offset, size_t stride) override { return ptr_ + (offset * stride); }
-		void op_add(int offset, size_t stride) override { ptr_ += (offset * stride); }
+		char* op_index(int offset, size_t stride) override;
+		void op_add(int offset, size_t stride) override;
 	};
 
 	class FileMap : public IMMap
@@ -75,7 +74,8 @@ namespace MeCab {
 		std::unordered_map<size_t, char*> mmap_;
 		macab_io_file_t* io_;
 		file_handle_t handle_;
-		int pos_;
+		int relative_;
+		int orig_;
 		size_t size_;
 
 	public:
