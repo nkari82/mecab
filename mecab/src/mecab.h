@@ -16,6 +16,7 @@ struct macab_io_file_t {
 	file_handle_t(*open)(const char *path, const char *mode, size_t* length, void **mapped);
 	void(*close)(file_handle_t handle);
 	size_t(*read)(file_handle_t handle, char *buffer, size_t size);
+	void(*seek)(file_handle_t handle, int offset);
 };
 
 /**

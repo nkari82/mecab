@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include "mecab.h"
 #include "common.h"
+#include "file.h"
 #include "connector.h"
 #include "darts.h"
 #include "learner_node.h"

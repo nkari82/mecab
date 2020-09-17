@@ -10,6 +10,7 @@
 #include <unordered_map>
 #include "mecab.h"
 #include "common.h"
+#include "file.h"
 #include "connector.h"
 #include "nbest_generator.h"
 #include "param.h"
@@ -223,6 +224,7 @@ class TaggerImpl: public Tagger {
   int                       request_type_;
   double                    theta_;
   std::string               what_;
+  macab_io_file_t io_;
 };
 
 class LatticeImpl : public Lattice {
@@ -467,8 +469,9 @@ bool TaggerImpl::open(int argc, char **argv) {
 }
 
 bool TaggerImpl::open(const char *arg, macab_io_file_t *io) {
+  io_ = io ? *io : *default_io();
   model_.reset(new ModelImpl);
-  if (!model_->open(arg, io)) {
+  if (!model_->open(arg, &io_)) {
     model_.reset();
     return false;
   }
@@ -1260,8 +1263,7 @@ int mecab_do(int argc, char **argv, macab_io_file_t *io) {
         return false;
       }
       if (ifs->fail()) {
-        std::cerr << "input-buffer overflow. "
-                  << "The line is split. use -b #SIZE option." << std::endl;
+        std::cerr << "input-buffer overflow. " << "The line is split. use -b #SIZE option." << std::endl;
         ifs->clear();
       }
       const char *r = (nbest >= 2) ? tagger->parseNBest(nbest, ibuf) :

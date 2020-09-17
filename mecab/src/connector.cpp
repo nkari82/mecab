@@ -9,6 +9,7 @@
 #include <unordered_map>
 #include "mecab.h"
 #include "common.h"
+#include "file.h"
 #include "connector.h"
 #include "param.h"
 #include "utils.h"
@@ -24,20 +25,23 @@ bool Connector::open(const Param &param, macab_io_file_t *io) {
 bool Connector::open(const char* filename, const char *mode, macab_io_file_t *io) {
   close();
   io_ = io ? *io : *default_io();
+  const char *mapped(nullptr);
   size_t length(0);
-  CHECK_FALSE(handle_ = io_.open(filename, mode, &length, (void**)&matrix_)) << "cannot open: " << filename;
-  length /= sizeof(short);
+  CHECK_FALSE(handle_ = io_.open(filename, mode, &length, (void**)&mapped)) << "cannot open: " << filename;
 
-  CHECK_FALSE(matrix_) << "matrix is NULL" ;
-  CHECK_FALSE(length >= 2) << "file size is invalid: " << filename;
+  std::shared_ptr<IMMap> ptr;
+  ptr.reset(mapped ? new MMap((char*)mapped, length) : (IMMap*)(new FileMap(&io_, handle_, length)));
 
-  lsize_ = static_cast<unsigned short>(matrix_[0]);
-  rsize_ = static_cast<unsigned short>(matrix_[1]);
+  ptr->read(&lsize_, sizeof(unsigned short));
+  ptr->read(&rsize_, sizeof(unsigned short));
 
-  CHECK_FALSE(static_cast<size_t>(lsize_ * rsize_ + 2) == length)
-      << "file size is invalid: " << filename;
+  matrix_ = (short*)ptr->data();
 
-  matrix_ += 2;
+  CHECK_FALSE(matrix_) << "matrix is NULL";
+  CHECK_FALSE((length/sizeof(short)) >= 2) << "file size is invalid: " << filename;
+
+  CHECK_FALSE(static_cast<size_t>(lsize_ * rsize_ + 2) == (length / sizeof(short))) << "file size is invalid: " << filename;
+
   return true;
 }
 

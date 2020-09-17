@@ -12,6 +12,7 @@
 #include <unordered_map>
 #include "mecab.h"
 #include "common.h"
+#include "file.h"
 #include "param.h"
 #include "utils.h"
 #include "string_buffer.h"

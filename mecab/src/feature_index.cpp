@@ -11,6 +11,7 @@
 #include <unordered_map>
 #include "mecab.h"
 #include "common.h"
+#include "file.h"
 #include "utils.h"
 #include "learner_node.h"
 #include "string_buffer.h"

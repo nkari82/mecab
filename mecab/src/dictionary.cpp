@@ -9,6 +9,7 @@
 #include <unordered_map>
 #include "mecab.h"
 #include "common.h"
+#include "file.h"
 #include "freelist.h"
 #include "learner_node.h"
 #include "string_buffer.h"
@@ -83,16 +84,13 @@ bool Dictionary::open(const char *file, const char *mode, macab_io_file_t *io) {
   io_ = io ? *io : *default_io();
   filename_.assign(file);
   const char *mapped(nullptr);
-  const char *end(nullptr);
   size_t length(0);
   CHECK_FALSE(handle_ = io_.open(file, mode, &length, (void**)&mapped)) << "no such file or directory: " << file;
   CHECK_FALSE(length >= 100) << "dictionary file is broken: " << file;
 
   std::shared_ptr<IMMap> ptr;
-  ptr.reset(mapped != nullptr ? new MMap((char*)mapped) : nullptr);
+  ptr.reset(mapped ? new MMap((char*)mapped, length) : (IMMap*)(new FileMap(&io_, handle_, length)));
   
-  //end = *ptr + length;
-
   unsigned int dsize;
   unsigned int tsize;
   unsigned int fsize;
@@ -114,7 +112,7 @@ bool Dictionary::open(const char *file, const char *mode, macab_io_file_t *io) {
   ptr->read(&fsize, sizeof(unsigned int));
   ptr->read(&dummy, sizeof(unsigned int));
   ptr->read((void*)charset_, 32);
-  da_.set_array(reinterpret_cast<void *>(ptr->data()));
+  da_.set_array(reinterpret_cast<void *>(ptr->data(dsize)));
   *ptr += dsize;
 
   token_ = ptr->clone();
@@ -122,8 +120,6 @@ bool Dictionary::open(const char *file, const char *mode, macab_io_file_t *io) {
 
   feature_ = ptr->clone();
   *ptr += fsize;
-
-  //CHECK_FALSE(ptr.get() == end) << "dictionary file is broken: " << file;
 
   return true;
 }
@@ -226,16 +222,16 @@ bool Dictionary::assignUserDictionaryCosts(
 
 const Token *Dictionary::token(const result_type &n) const
 {
-	size_t pos = sizeof(Token) * (n.value >> 8);
+	int offset = sizeof(Token) * (n.value >> 8);
 	Token* token(nullptr);
-	token_->read((void**)&token, pos, sizeof(Token));
+	token_->read(offset, (void**)&token, sizeof(Token));
 	return token;
 }
 
 const char *Dictionary::feature(const Token &t) const
 {
 	char* str(nullptr);
-	feature_->read((char**)&str, t.feature);
+	feature_->read(t.feature, (char**)&str);
 	return str;
 }
 

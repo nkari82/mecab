@@ -2,6 +2,7 @@
 #include <cassert>
 #include "mecab.h"
 #include "common.h"
+#include "file.h"
 #include "utils.h"
 
 #ifdef HAVE_CONFIG_H
@@ -24,17 +25,20 @@
 namespace MeCab {
 	struct file_t
 	{
+		file_handle_t handle;
 #if defined(_WIN32) && !defined(__CYGWIN__)
-		HANDLE handle;
+		HANDLE native;
 		HANDLE map;
 #else
-		int handle;
+		int native;
 #endif
 		int	mode;
 		void* view;
 		size_t length;
 		std::string path;
 	};
+
+	static file_t* s_current(nullptr);
 
 	static std::unordered_map<file_handle_t, file_t> s_files;
 	static whatlog what_;
@@ -54,36 +58,37 @@ namespace MeCab {
 
 		file_t file;
 		std::memset(&file, 0, sizeof(file));
+		file.handle = handle;
 		file.path = path;
 #if defined(_WIN32) && !defined(__CYGWIN__)
 		file.mode = GENERIC_READ | (write ? GENERIC_WRITE : 0);
-		file.handle = ::CreateFileW(WPATH_FORCE(path), file.mode, !mapped ? 0 : FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
-		CHECK_FALSE(file.handle != INVALID_HANDLE_VALUE) << "CreateFile() failed: " << path;
+		file.native = ::CreateFileW(WPATH_FORCE(path), file.mode, !mapped ? 0 : FILE_SHARE_READ, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+		CHECK_FALSE(file.native != INVALID_HANDLE_VALUE) << "CreateFile() failed: " << path;
 
-		file.length = ::GetFileSize(file.handle, 0);
+		file.length = ::GetFileSize(file.native, 0);
 		if (mapped != nullptr)
 		{
-			file.map = ::CreateFileMapping(file.handle, 0, write ? PAGE_READWRITE : PAGE_READONLY, 0, 0, 0);
+			file.map = ::CreateFileMapping(file.native, 0, write ? PAGE_READWRITE : PAGE_READONLY, 0, 0, 0);
 			CHECK_FALSE(file.map) << "CreateFileMapping() failed: " << path;
 			*mapped = file.view = ::MapViewOfFile(file.map, write ? FILE_MAP_ALL_ACCESS : FILE_MAP_READ, 0, 0, 0);
 			CHECK_FALSE(file.view) << "MapViewOfFile() failed: " << path;
 		}
 #else
 		file.mode = (write ? O_RDWR : O_RDONLY) | O_BINARY;
-		CHECK_FALSE((file.handle = ::open(path, file.mode)) >= 0) << "open failed: " << path;
+		CHECK_FALSE((file.native = ::open(path, file.mode)) >= 0) << "open failed: " << path;
 
 		struct stat st;
-		::fstat(file.handle, &st);
+		::fstat(file.native, &st);
 		file.length = st.st_size;
 
 		if (mapped != nullptr)
 		{
 #ifdef HAVE_MMAP
-			CHECK_FALSE((file.view = ::mmap(0, file.length, PROT_READ | (write ? PROT_WRITE : 0), MAP_SHARED, file.handle, 0)) != MAP_FAILED)
+			CHECK_FALSE((file.view = ::mmap(0, file.length, PROT_READ | (write ? PROT_WRITE : 0), MAP_SHARED, file.native, 0)) != MAP_FAILED)
 				<< "mmap() failed: " << path;
 #else
 			file.view = malloc(file.length);
-			CHECK_FALSE(::read(file.handle, file.view, file.length) >= 0) << "read() failed: " << path;
+			CHECK_FALSE(::read(file.native, file.view, file.length) >= 0) << "read() failed: " << path;
 			*mapped = file.view;
 #endif
 		}
@@ -92,6 +97,7 @@ namespace MeCab {
 			*length = file.length;
 
 		s_files.insert(s_files.end(), std::make_pair(handle, file));
+		s_current = &file;
 		return handle;
 	}
 
@@ -105,7 +111,7 @@ namespace MeCab {
 #if defined(_WIN32) && !defined(__CYGWIN__)
 		if( file.view != nullptr) ::UnmapViewOfFile(file.view);
 		if( file.map != 0 ) ::CloseHandle(file.map);
-		::CloseHandle(file.handle);
+		::CloseHandle(file.native);
 #else
 		if (file.view != nullptr)
 		{
@@ -113,7 +119,7 @@ namespace MeCab {
 			::munmap(file.view, file.length);
 #else
 			if (file.mode & O_RDWR) {
-				::write(file.handle, file.view, file.length);
+				::write(file.native, file.view, file.length);
 			}
 			free(file.view);
 #endif
@@ -121,27 +127,50 @@ namespace MeCab {
 		::close(file.handle);
 #endif
 		s_files.erase(it);
+		if (!s_files.empty() && s_current->handle == handle)
+			s_current = &s_files.begin()->second;
 	}
 
 	static size_t read(file_handle_t handle, char *buffer, size_t size)
 	{
-		auto it = s_files.find(handle);
-		if (it == s_files.end())
-			return 0;
+		if (s_current->handle != handle)
+		{
+			auto it = s_files.find(handle);
+			if (it == s_files.end())
+				return 0;
 
-		auto& file = it->second;
+			s_current = &it->second;
+		}
 		
 		size_t read(0);
 #if defined(_WIN32) && !defined(__CYGWIN__)
-		ReadFile(file.handle, buffer, (DWORD)size, (DWORD*)&read, nullptr);
+		ReadFile(s_current->native, buffer, (DWORD)size, (DWORD*)&read, nullptr);
 #else
-		read = ::read(file.handle, buffer, size);
+		read = ::read(s_current->native, buffer, size);
 #endif
 		return read;
 	}
 
+	static void seek(file_handle_t handle, int offset)
+	{
+		if (s_current->handle != handle)
+		{
+			auto it = s_files.find(handle);
+			if (it == s_files.end())
+				return;
+
+			s_current = &it->second;
+		}
+		
+#if defined(_WIN32) && !defined(__CYGWIN__)
+		SetFilePointer(s_current->native, offset, nullptr, FILE_BEGIN);
+#else
+		::lseek(s_current->native, offset, 0);
+#endif
+	}
+
 	macab_io_file_t* default_io() {
-		static macab_io_file_t io{ open, close, read };
+		static macab_io_file_t io{ open, close, read, seek };
 		return &io;
 	}
 
@@ -167,5 +196,97 @@ namespace MeCab {
 			this->setg(this->buffer_, this->buffer_, this->buffer_ + size);
 		}
 		return this->gptr() == this->egptr() ? traits_type::eof() : traits_type::to_int_type(*this->gptr());
+	}
+
+	FileMap::FileMap(macab_io_file_t* io, file_handle_t handle, size_t size, int pos)
+		: io_(io)
+		, handle_(handle)
+		, size_(size)
+		, pos_(pos)
+	{}
+
+	FileMap::~FileMap()
+	{
+		for (auto& pair : mmap_)
+			delete pair.second;
+	}
+
+	char* FileMap::data(size_t size)
+	{
+		char* val(nullptr);
+		read(pos_, (void**)&val, size);
+		return val;
+	}
+
+	char* FileMap::data()
+	{
+		char* val(nullptr);
+		read(pos_, (void**)&val, size_ - pos_);
+		return val;
+	}
+
+	void FileMap::read(void* val, size_t size)
+	{
+		io_->read(handle_, (char*)val, size);
+		pos_ += (int)size;
+	}
+
+	void FileMap::read(int offset, void** val, size_t size)
+	{
+		auto pos = pos_ + offset;
+		auto it = mmap_.find(pos);
+		if (it == mmap_.end())
+		{
+			*val = new char[size];
+			io_->seek(handle_, pos);
+			io_->read(handle_, (char*)*val, size);
+			mmap_.emplace(std::make_pair(offset, (char*)*val));
+		}
+		else
+		{
+			*val = it->second;
+		}
+	}
+
+	void FileMap::read(int offset, char** str)
+	{
+		auto pos = pos_ + offset;
+		auto it = mmap_.find(pos);
+		if (it == mmap_.end())
+		{
+			io_->seek(handle_, pos);
+
+			char temp[512];
+			size_t len(0);
+			do 
+			{
+				io_->read(handle_, &temp[len], 1);
+			} while (temp[len++] != '\0');
+
+			*str = new char[len];
+			std::memcpy(*str, temp, len);
+			mmap_.emplace(std::make_pair(offset, (char*)*str));
+		}
+		else
+		{
+			*str = it->second;
+		}
+	}
+
+	IMMap::Ptr FileMap::clone()
+	{
+		return std::make_shared<FileMap>(io_, handle_, size_ - pos_, pos_);	// bug
+	}
+
+	char* FileMap::op_index(int offset, size_t stride)
+	{
+		char* val(nullptr);
+		read(int(offset * stride), (void**)&val, stride);
+		return val;
+	}
+
+	void FileMap::op_add(int offset, size_t stride)
+	{
+		pos_ += int(offset * stride);
 	}
 }

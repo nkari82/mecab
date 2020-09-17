@@ -12,6 +12,7 @@
 #include <unordered_map>
 #include "mecab.h"
 #include "common.h"
+#include "file.h"
 #include "param.h"
 #include "utils.h"
 #include "char_property.h"
@@ -82,29 +83,29 @@ bool CharProperty::open(const Param &param, macab_io_file_t *io) {
 bool CharProperty::open(const char *filename, macab_io_file_t *io) {
   close();
   io_ = io ? *io : *default_io();
-
   std::ostringstream error;
-  const char *ptr(nullptr);
+  const char *mapped(nullptr);
   size_t length(0);
-  CHECK_FALSE(handle_ = io_.open(filename, "r", &length, (void**)&ptr));
+  CHECK_FALSE(handle_ = io_.open(filename, "r", &length, (void**)&mapped));
+
+  std::shared_ptr<IMMap> ptr;
+  ptr.reset(mapped ? new MMap((char*)mapped, length) : (IMMap*)(new FileMap(&io_, handle_, length)));
 
   unsigned int csize;
-  read_static<unsigned int>(&ptr, csize);
+  ptr->read(&csize, sizeof(unsigned int));
 
-  size_t fsize = sizeof(unsigned int) +
-      (32 * csize) + sizeof(unsigned int) * 0xffff;
+  size_t fsize = sizeof(unsigned int) + (32 * csize) + sizeof(unsigned int) * 0xffff;
 
-  CHECK_FALSE(fsize == length)
-      << "invalid file size: " << filename;
+  CHECK_FALSE(fsize == length) << "invalid file size: " << filename;
 
   clist_.clear();
   for (unsigned int i = 0; i < csize; ++i) {
-    const char *s = read_ptr(&ptr, 32);
-    clist_.push_back(s);
+	auto it = clist_.emplace(clist_.end());
+	it->resize(32);
+	ptr->read((void*)it->c_str(), 32);
   }
 
-  map_ = reinterpret_cast<const CharInfo *>(ptr);
-
+  map_ = (const CharInfo*)(ptr->data());
   return true;
 }
 
@@ -116,7 +117,7 @@ void CharProperty::close() {
 size_t CharProperty::size() const { return clist_.size(); }
 
 const char *CharProperty::name(size_t i) const {
-  return const_cast<const char*>(clist_[i]);
+  return const_cast<const char*>(clist_[i].data());
 }
 
 // this function must be rewritten.
@@ -126,7 +127,7 @@ void CharProperty::set_charset(const char *ct) {
 
 int CharProperty::id(const char *key) const {
   for (int i = 0; i < static_cast<long>(clist_.size()); ++i) {
-    if (std::strcmp(key, clist_[i]) == 0) {
+    if (std::strcmp(key, clist_[i].data()) == 0) {
       return i;
     }
   }
