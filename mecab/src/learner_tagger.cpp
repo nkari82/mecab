@@ -8,6 +8,7 @@
 #include <iostream>
 #include <iterator>
 #include <vector>
+#include <array>
 #include "mecab.h"
 #include "common.h"
 #include "utils.h"
@@ -61,7 +62,7 @@ bool DecoderLearnerTagger::open(const Param &param) {
 
 bool EncoderLearnerTagger::read(std::istream *is,
                                 std::vector<double> *observed) {
-  scoped_fixed_array<char, BUF_SIZE> line;
+  std::array<char, BUF_SIZE> line;
   char *column[8];
   std::string sentence;
   std::vector<LearnerNode *> corpus;
@@ -70,12 +71,12 @@ bool EncoderLearnerTagger::read(std::istream *is,
   bool eos = false;
 
   for (;;) {
-    if (!is->getline(line.get(), line.size())) {
+    if (!is->getline(line.data(), line.size())) {
       is->clear(std::ios::eofbit|std::ios::badbit);
       return true;
     }
 
-    eos = (std::strcmp(line.get(), "EOS") == 0 || line[0] == '\0');
+    eos = (std::strcmp(line.data(), "EOS") == 0 || line[0] == '\0');
 
     LearnerNode *m = new LearnerNode;
     std::memset(m, 0, sizeof(LearnerNode));
@@ -83,8 +84,8 @@ bool EncoderLearnerTagger::read(std::istream *is,
     if (eos) {
       m->stat = MECAB_EOS_NODE;
     } else {
-      const size_t size = tokenize(line.get(), "\t", column, 2);
-      CHECK_DIE(size == 2) << "format error: " << line.get();
+      const size_t size = tokenize(line.data(), "\t", column, 2);
+      CHECK_DIE(size == 2) << "format error: " << line.data();
       m->stat    = MECAB_NOR_NODE;
       m->surface = mystrdup(column[0]);
       m->feature = mystrdup(column[1]);
@@ -104,8 +105,8 @@ bool EncoderLearnerTagger::read(std::istream *is,
 
   CHECK_DIE(eos) << "\"EOS\" is not found";
 
-  begin_data_.reset_string(sentence);
-  begin_ = begin_data_.get();
+  begin_data_ = sentence;
+  begin_ = begin_data_.data();
 
   initList();
 
@@ -200,8 +201,7 @@ bool EncoderLearnerTagger::read(std::istream *is,
   return true;
 }
 
-int EncoderLearnerTagger::eval(size_t *crr,
-                               size_t *prec, size_t *recall) const {
+int EncoderLearnerTagger::eval(size_t *crr, size_t *prec, size_t *recall) const {
   int zeroone = 0;
 
   LearnerNode *res = end_node_list_[0]->next;
@@ -254,8 +254,9 @@ bool DecoderLearnerTagger::parse(std::istream* is, std::ostream *os) {
   feature_index_->clear();
 
   if (!begin_) {
-    begin_data_.reset(new char[BUF_SIZE * 16]);
-    begin_ = begin_data_.get();
+	begin_data_.clear();
+    begin_data_.resize(BUF_SIZE * 16);
+    begin_ = begin_data_.data();
   }
 
   if (!is->getline(const_cast<char *>(begin_), BUF_SIZE * 16)) {

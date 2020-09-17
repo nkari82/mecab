@@ -9,7 +9,6 @@
 #include <string>
 #include "mecab.h"
 #include "common.h"
-#include "scoped_ptr.h"
 #include "utils.h"
 
 #ifdef HAVE_CONFIG_H
@@ -146,21 +145,19 @@ bool Iconv::convert(std::string *str) {
     return false;
   }
 
-  scoped_array<wchar_t> wide_str(new wchar_t[wide_len + 1]);
+  std::vector<wchar_t> wide_str(wide_len + 1);
 
-  if (!wide_str.get()) {
+  if (wide_str.empty()) {
     return false;
   };
 
-  if (::MultiByteToWideChar(from_cp_, 0, str->c_str(), -1,
-                            wide_str.get(), wide_len + 1) == 0) {
+  if (::MultiByteToWideChar(from_cp_, 0, str->c_str(), -1, wide_str.data(), wide_len + 1) == 0) {
     return false;
   }
 
   if (to_cp_ == 1200 || to_cp_ == 1201) {
     str->resize(2 * wide_len);
-    std::memcpy(const_cast<char *>(str->data()),
-                reinterpret_cast<char *>(wide_str.get()), wide_len * 2);
+    std::memcpy(const_cast<char *>(str->data()), reinterpret_cast<char *>(wide_str.data()), wide_len * 2);
     if (to_cp_ == 1201) {
       char *buf = const_cast<char *>(str->data());
       for (size_t i = 0; i < 2 * wide_len; i += 2) {
@@ -170,23 +167,17 @@ bool Iconv::convert(std::string *str) {
     return true;
   }
 
-  const size_t output_len = ::WideCharToMultiByte(to_cp_, 0,
-                                                  wide_str.get(),
-                                                  -1,
-                                                  NULL, 0, NULL, NULL);
-
+  const size_t output_len = ::WideCharToMultiByte(to_cp_, 0, wide_str.data(), -1, NULL, 0, NULL, NULL);
   if (output_len == 0) {
     return false;
   }
 
-  scoped_array<char> encoded(new char[output_len + 1]);
-  if (::WideCharToMultiByte(to_cp_, 0, wide_str.get(), wide_len,
-                            encoded.get(), output_len + 1,
-                            NULL, NULL) == 0) {
+  std::vector<char> encoded(output_len + 1);
+  if (::WideCharToMultiByte(to_cp_, 0, wide_str.data(), wide_len, encoded.data(), output_len + 1, NULL, NULL) == 0) {
     return false;
   }
 
-  str->assign(encoded.get());
+  str->assign(encoded.data());
 
 #endif
 #endif

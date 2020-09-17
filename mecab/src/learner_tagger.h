@@ -11,7 +11,6 @@
 #include "freelist.h"
 #include "feature_index.h"
 #include "tokenizer.h"
-#include "scoped_ptr.h"
 
 namespace MeCab {
 
@@ -32,7 +31,7 @@ class LearnerTagger {
   Allocator<LearnerNode, LearnerPath> *allocator_;
   FreeList<LearnerPath>               *path_allocator_;
   FeatureIndex                        *feature_index_;
-  scoped_string                        begin_data_;
+  std::string                        begin_data_;
   const char                          *begin_;
   const char                          *end_;
   size_t                               len_;
@@ -71,9 +70,9 @@ class DecoderLearnerTagger: public LearnerTagger {
   virtual ~DecoderLearnerTagger() { close(); }
 
  private:
-  scoped_ptr<Tokenizer<LearnerNode, LearnerPath> > tokenizer_data_;
-  scoped_ptr<Allocator<LearnerNode, LearnerPath> > allocator_data_;
-  scoped_ptr<FeatureIndex> feature_index_data_;
+  std::shared_ptr<Tokenizer<LearnerNode, LearnerPath> > tokenizer_data_;
+  std::shared_ptr<Allocator<LearnerNode, LearnerPath> > allocator_data_;
+  std::shared_ptr<FeatureIndex> feature_index_data_;
 };
 }
 

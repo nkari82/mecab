@@ -9,11 +9,11 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <array>
 #include "mecab.h"
 #include "common.h"
 #include "dictionary_rewriter.h"
 #include "iconv_utils.h"
-#include "scoped_ptr.h"
 #include "utils.h"
 
 namespace {
@@ -42,12 +42,12 @@ bool match_rewrite_pattern(const char *pat,
 
   size_t len = std::strlen(pat);
   if (len >= 3 && pat[0] == '(' && pat[len-1] == ')') {
-    scoped_fixed_array<char, BUF_SIZE> buf;
-    scoped_fixed_array<char *, BUF_SIZE> col;
+    std::array<char, BUF_SIZE> buf;
+    std::array<char *, BUF_SIZE> col;
     CHECK_DIE(len < buf.size() - 3) << "too long parameter";
-    std::strncpy(buf.get(), pat + 1, buf.size());
+    std::strncpy(buf.data(), pat + 1, buf.size());
     buf[len-2] = '\0';
-    const size_t n = tokenize(buf.get(), "|", col.get(), col.size());
+    const size_t n = tokenize(buf.data(), "|", col.data(), col.size());
     CHECK_DIE(n < col.size()) << "too long OR nodes";
     for (size_t i = 0; i < n; ++i) {
       if (std::strcmp(str, col[i]) == 0) return true;
@@ -61,15 +61,15 @@ namespace MeCab {
 
 bool RewritePattern::set_pattern(const char *src,
                                  const char *dst) {
-  scoped_fixed_array<char, BUF_SIZE> buf;
+  std::array<char, BUF_SIZE> buf;
   spat_.clear();
   dpat_.clear();
 
-  std::strncpy(buf.get(), src, buf.size());
-  tokenizeCSV(buf.get(), back_inserter(spat_), 512);
+  std::strncpy(buf.data(), src, buf.size());
+  tokenizeCSV(buf.data(), back_inserter(spat_), 512);
 
-  std::strncpy(buf.get(), dst, buf.size());
-  tokenizeCSV(buf.get(), back_inserter(dpat_), 512);
+  std::strncpy(buf.data(), dst, buf.size());
+  tokenizeCSV(buf.data(), back_inserter(dpat_), 512);
 
   return (spat_.size() && dpat_.size());
 }
@@ -164,17 +164,17 @@ bool DictionaryRewriter::rewrite(const std::string &feature,
                                  std::string *ufeature,
                                  std::string *lfeature,
                                  std::string *rfeature) const {
-  scoped_fixed_array<char, BUF_SIZE> buf;
-  scoped_fixed_array<char *, BUF_SIZE> col;
+  std::array<char, BUF_SIZE> buf;
+  std::array<char *, BUF_SIZE> col;
   CHECK_DIE(feature.size() < buf.size() - 1) << "too long feature";
-  std::strncpy(buf.get(), feature.c_str(), buf.size() - 1);
-  const size_t n = tokenizeCSV(buf.get(), col.get(), col.size());
+  std::strncpy(buf.data(), feature.c_str(), buf.size() - 1);
+  const size_t n = tokenizeCSV(buf.data(), col.data(), col.size());
   CHECK_DIE(n < col.size()) << "too long CSV entities";
-  return (unigram_rewrite_.rewrite(n, const_cast<const char **>(col.get()),
+  return (unigram_rewrite_.rewrite(n, const_cast<const char **>(col.data()),
                                    ufeature) &&
-          left_rewrite_.rewrite(n, const_cast<const char **>(col.get()),
+          left_rewrite_.rewrite(n, const_cast<const char **>(col.data()),
                                 lfeature) &&
-          right_rewrite_.rewrite(n, const_cast<const char **>(col.get()),
+          right_rewrite_.rewrite(n, const_cast<const char **>(col.data()),
                                  rfeature));
 }
 
@@ -228,14 +228,14 @@ bool POSIDGenerator::open(const char *filename,
 }
 
 int POSIDGenerator::id(const char *feature) const {
-  scoped_fixed_array<char, BUF_SIZE> buf;
-  scoped_fixed_array<char *, BUF_SIZE> col;
+  std::array<char, BUF_SIZE> buf;
+  std::array<char *, BUF_SIZE> col;
   CHECK_DIE(std::strlen(feature) < buf.size() - 1) << "too long feature";
-  std::strncpy(buf.get(), feature, buf.size() - 1);
-  const size_t n = tokenizeCSV(buf.get(), col.get(), col.size());
+  std::strncpy(buf.data(), feature, buf.size() - 1);
+  const size_t n = tokenizeCSV(buf.data(), col.data(), col.size());
   CHECK_DIE(n < col.size()) << "too long CSV entities";
   std::string tmp;
-  if (!rewrite_.rewrite(n, const_cast<const char **>(col.get()), &tmp)) {
+  if (!rewrite_.rewrite(n, const_cast<const char **>(col.data()), &tmp)) {
     return -1;
   }
   return std::atoi(tmp.c_str());

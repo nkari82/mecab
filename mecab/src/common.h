@@ -140,6 +140,75 @@ public:
 	~iobuf();
 	int underflow();
 };
+
+class IMMap
+{
+public:
+	using Ptr = std::shared_ptr<IMMap>;
+
+	virtual ~IMMap() = default;
+
+	virtual char* data() = 0;
+	template<class T=char> T* operator[](size_t index) { return (T*)op_index(index, sizeof(T)); }
+	template<class T=char> T* operator+(size_t offset) { return (T*)op_index(offset, sizeof(T)); }
+	template<class T=char> void operator+=(size_t offset) { op_add(offset, sizeof(T)); }
+	virtual void read(void* val, size_t size) = 0;
+	virtual void read(void** val, size_t pos, size_t size) = 0;	// no copy
+	virtual void read(char** str, size_t pos) = 0; // no copy string
+	virtual Ptr clone() = 0;
+
+protected:
+	virtual char* op_index(size_t offset, size_t stride) { return nullptr; }
+	virtual void op_add(size_t offset, size_t stride) {}
+};
+
+class MMap : public IMMap
+{
+private:
+	char* ptr_;
+
+public:
+	MMap(void* ptr)
+		: ptr_((char*)ptr) 
+	{}
+
+	char* data() override { return ptr_; }
+	void read(void* val, size_t size) override
+	{
+		std::memcpy(val, ptr_, size);
+		ptr_ += size;
+	}
+
+	void read(void** val, size_t pos, size_t size) override
+	{
+		*val = (ptr_ + pos);
+	}
+
+	void read(char** str, size_t pos) override
+	{
+		*str = (ptr_ + pos);
+	}
+
+	Ptr clone() override
+	{
+		return std::make_shared<MMap>(ptr_);
+	}
+
+private:
+	char* op_index(size_t offset, size_t stride) override
+	{
+		return ptr_ + (offset * stride);
+	}
+
+	void op_add(size_t offset, size_t stride) override
+	{
+		ptr_ += (offset * stride);
+	}
+};
+
+class FileMap : public IMMap
+{
+};
 }  // MeCab
 
 #define WHAT what_.stream_

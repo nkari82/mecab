@@ -7,6 +7,7 @@
 #include <cstring>
 #include <fstream>
 #include <string>
+#include <array>
 #include "mecab.h"
 #include "common.h"
 #include "utils.h"
@@ -81,17 +82,17 @@ bool FeatureIndex::openTemplate(const Param &param) {
   std::ifstream ifs(WPATH(filename.c_str()));
   CHECK_DIE(ifs) << "no such file or directory: " << filename;
 
-  scoped_fixed_array<char, BUF_SIZE> buf;
+  std::array<char, BUF_SIZE> buf;
   char *column[4];
 
   unigram_templs_.clear();
   bigram_templs_.clear();
 
-  while (ifs.getline(buf.get(), buf.size())) {
+  while (ifs.getline(buf.data(), buf.size())) {
     if (buf[0] == '\0' || buf[0] == '#' || buf[0] == ' ') {
       continue;
     }
-    CHECK_DIE(tokenize2(buf.get(), "\t ", column, 2) == 2)
+    CHECK_DIE(tokenize2(buf.data(), "\t ", column, 2) == 2)
         << "format error: " <<filename;
 
     if (std::strcmp(column[0], "UNIGRAM") == 0) {
@@ -336,12 +337,12 @@ bool EncoderFeatureIndex::buildFeature(LearnerPath *path) {
 
 bool FeatureIndex::buildUnigramFeature(LearnerPath *path,
                                        const char *ufeature) {
-  scoped_fixed_array<char, BUFSIZE> ubuf;
-  scoped_fixed_array<char *, POSSIZE> F;
+  std::array<char, BUFSIZE> ubuf;
+  std::array<char *, POSSIZE> F;
 
   feature_.clear();
-  std::strncpy(ubuf.get(), ufeature, ubuf.size());
-  const size_t usize = tokenizeCSV(ubuf.get(), F.get(), F.size());
+  std::strncpy(ubuf.data(), ufeature, ubuf.size());
+  const size_t usize = tokenizeCSV(ubuf.data(), F.data(), F.size());
 
   for (std::vector<const char*>::const_iterator it = unigram_templs_.begin();
        it != unigram_templs_.end(); ++it) {
@@ -355,7 +356,7 @@ bool FeatureIndex::buildUnigramFeature(LearnerPath *path,
         case '%': {
           switch (*++p) {
             case 'F':  {
-              const char *r = getIndex(const_cast<char **>(&p), F.get(), usize);
+              const char *r = getIndex(const_cast<char **>(&p), F.data(), usize);
               if (!r) goto NEXT;
               os_ << r;
             } break;
@@ -386,17 +387,17 @@ bool FeatureIndex::buildUnigramFeature(LearnerPath *path,
 bool FeatureIndex::buildBigramFeature(LearnerPath *path,
                                       const char *rfeature,
                                       const char *lfeature) {
-  scoped_fixed_array<char, BUFSIZE> rbuf;
-  scoped_fixed_array<char, BUFSIZE> lbuf;
-  scoped_fixed_array<char *, POSSIZE> R;
-  scoped_fixed_array<char *, POSSIZE> L;
+  std::array<char, BUFSIZE> rbuf;
+  std::array<char, BUFSIZE> lbuf;
+  std::array<char *, POSSIZE> R;
+  std::array<char *, POSSIZE> L;
 
   feature_.clear();
-  std::strncpy(lbuf.get(),  rfeature, lbuf.size());
-  std::strncpy(rbuf.get(),  lfeature, rbuf.size());
+  std::strncpy(lbuf.data(),  rfeature, lbuf.size());
+  std::strncpy(rbuf.data(),  lfeature, rbuf.size());
 
-  const size_t lsize = tokenizeCSV(lbuf.get(), L.get(), L.size());
-  const size_t rsize = tokenizeCSV(rbuf.get(), R.get(), R.size());
+  const size_t lsize = tokenizeCSV(lbuf.data(), L.data(), L.size());
+  const size_t rsize = tokenizeCSV(rbuf.data(), R.data(), R.size());
 
   for (std::vector<const char*>::const_iterator it = bigram_templs_.begin();
        it != bigram_templs_.end(); ++it) {
@@ -410,12 +411,12 @@ bool FeatureIndex::buildBigramFeature(LearnerPath *path,
         case '%': {
           switch (*++p) {
             case 'L': {
-              const char *r = getIndex(const_cast<char **>(&p), L.get(), lsize);
+              const char *r = getIndex(const_cast<char **>(&p), L.data(), lsize);
               if (!r) goto NEXT;
               os_ << r;
             } break;
             case 'R': {
-              const char *r = getIndex(const_cast<char **>(&p), R.get(), rsize);
+              const char *r = getIndex(const_cast<char **>(&p), R.data(), rsize);
               if (!r) goto NEXT;
               os_ << r;
             } break;
@@ -545,17 +546,16 @@ bool FeatureIndex::convert(const Param &param,
                            const char* txtfile, std::string *output) {
   std::ifstream ifs(WPATH(txtfile));
   CHECK_DIE(ifs) << "no such file or directory: " << txtfile;
-  scoped_fixed_array<char, BUF_SIZE> buf;
+  std::array<char, BUF_SIZE> buf;
   char *column[4];
-  std::vector<std::pair<uint64_t, double> > dic;
+  std::vector<std::pair<uint64_t, double>> dic;
   std::string model_charset;
 
-  while (ifs.getline(buf.get(), buf.size())) {
-    if (std::strlen(buf.get()) == 0) {
+  while (ifs.getline(buf.data(), buf.size())) {
+    if (std::strlen(buf.data()) == 0) {
       break;
     }
-    CHECK_DIE(tokenize2(buf.get(), ":", column, 2) == 2)
-        << "format error: " << buf.get();
+    CHECK_DIE(tokenize2(buf.data(), ":", column, 2) == 2) << "format error: " << buf.data();
     if (std::string(column[0]) == "charset") {
       model_charset = column[1] + 1;
     }
@@ -583,9 +583,8 @@ bool FeatureIndex::convert(const Param &param,
             << "cannot create model from=" << from
             << " to=" << to;
 
-  while (ifs.getline(buf.get(), buf.size())) {
-    CHECK_DIE(tokenize2(buf.get(), "\t", column, 2) == 2)
-        << "format error: " << buf.get();
+  while (ifs.getline(buf.data(), buf.size())) {
+    CHECK_DIE(tokenize2(buf.data(), "\t", column, 2) == 2) << "format error: " << buf.data();
     std::string feature = column[1];
     CHECK_DIE(iconv.convert(&feature));
     const uint64_t fp = fingerprint(feature);
@@ -629,17 +628,16 @@ bool EncoderFeatureIndex::reopen(const char *filename,
     return false;
   }
 
-  scoped_fixed_array<char, BUF_SIZE> buf;
+  std::array<char, BUF_SIZE> buf;
   char *column[8];
 
   std::string model_charset;
 
-  while (ifs.getline(buf.get(), buf.size())) {
-    if (std::strlen(buf.get()) == 0) {
+  while (ifs.getline(buf.data(), buf.size())) {
+    if (std::strlen(buf.data()) == 0) {
       break;
     }
-    CHECK_DIE(tokenize2(buf.get(), ":", column, 2) == 2)
-        << "format error: " << buf.get();
+    CHECK_DIE(tokenize2(buf.data(), ":", column, 2) == 2) << "format error: " << buf.data();
     if (std::string(column[0]) == "charset") {
       model_charset = column[1] + 1;
     } else {
@@ -659,9 +657,9 @@ bool EncoderFeatureIndex::reopen(const char *filename,
   CHECK_DIE(maxid_ == 0);
   CHECK_DIE(dic_.empty());
 
-  while (ifs.getline(buf.get(), buf.size())) {
-    CHECK_DIE(tokenize2(buf.get(), "\t", column, 2) == 2)
-        << "format error: " << buf.get();
+  while (ifs.getline(buf.data(), buf.size())) {
+    CHECK_DIE(tokenize2(buf.data(), "\t", column, 2) == 2)
+        << "format error: " << buf.data();
     std::string feature = column[1];
     CHECK_DIE(iconv.convert(&feature));
     dic_.insert(std::make_pair(feature, int(maxid_++)));

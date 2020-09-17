@@ -9,7 +9,6 @@
 #include <cstring>
 #include "mecab.h"
 #include "common.h"
-#include "scoped_ptr.h"
 #include "freelist.h"
 #include "learner_node.h"
 #include "string_buffer.h"
@@ -268,8 +267,8 @@ bool Viterbi::initPartial(Lattice *lattice) {
                                 std::back_inserter(lines),
                                 lattice->size() + 1);
   char* column[2];
-  scoped_array<char> buf(new char[lattice->size() + 1]);
-  StringBuffer os(buf.get(), lattice->size() + 1);
+  std::vector<char> buf(lattice->size() + 1);
+  StringBuffer os(buf.data(), lattice->size() + 1);
 
   std::vector<std::pair<char *, char *> > tokens;
   tokens.reserve(lsize);

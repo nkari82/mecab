@@ -3,13 +3,13 @@
 //
 //  Copyright(C) 2001-2011 Taku Kudo <taku@chasen.org>
 //  Copyright(C) 2004-2006 Nippon Telegraph and Telephone Corporation
+#include <array>
 #include "mecab.h"
 #include "common.h"
 #include "connector.h"
 #include "darts.h"
 #include "learner_node.h"
 #include "param.h"
-#include "scoped_ptr.h"
 #include "tokenizer.h"
 #include "utils.h"
 #include "viterbi.h"
@@ -81,7 +81,7 @@ template <typename N, typename P>
 N *Tokenizer<N, P>::getBOSNode(Allocator<N, P> *allocator) const {
   N *bos_node = allocator->newNode();
   bos_node->surface = const_cast<const char *>(BOS_KEY);  // dummy
-  bos_node->feature = bos_feature_.get();
+  bos_node->feature = bos_feature_.data();
   bos_node->isbest = 1;
   bos_node->stat = MECAB_BOS_NODE;
   return bos_node;
@@ -112,10 +112,10 @@ bool Tokenizer<N, P>::open(const Param &param, macab_io_file_t *io) {
 
   const std::string userdic = param.template get<std::string>("userdic");
   if (!userdic.empty()) {
-    scoped_fixed_array<char, BUF_SIZE> buf;
-    scoped_fixed_array<char *, BUF_SIZE> dicfile;
-    std::strncpy(buf.get(), userdic.c_str(), buf.size());
-    const size_t n = tokenizeCSV(buf.get(), dicfile.get(), dicfile.size());
+    std::array<char, BUF_SIZE> buf;
+    std::array<char *, BUF_SIZE> dicfile;
+    std::strncpy(buf.data(), userdic.c_str(), buf.size());
+    const size_t n = tokenizeCSV(buf.data(), dicfile.data(), dicfile.size());
     for (size_t i = 0; i < n; ++i) {
       Dictionary *d = new Dictionary;
       CHECK_FALSE(d->open(dicfile[i])) << d->what();
@@ -154,16 +154,15 @@ bool Tokenizer<N, P>::open(const Param &param, macab_io_file_t *io) {
 
   space_ = property_.getCharInfo(0x20);  // ad-hoc
 
-  bos_feature_.reset_string(param.template get<std::string>("bos-feature"));
+  bos_feature_ = (param.template get<std::string>("bos-feature"));
 
   const std::string tmp = param.template get<std::string>("unk-feature");
-  unk_feature_.reset(0);
+  unk_feature_.clear();
   if (!tmp.empty()) {
-    unk_feature_.reset_string(tmp);
+    unk_feature_ = tmp;
   }
 
-  CHECK_FALSE(*bos_feature_ != '\0')
-      << "bos-feature is undefined in dicrc";
+  CHECK_FALSE(*bos_feature_.data() != '\0') << "bos-feature is undefined in dicrc";
 
   max_grouping_size_ = param.template get<size_t>("max-grouping-size");
   if (max_grouping_size_ == 0) {
@@ -179,16 +178,16 @@ inline bool partial_match(const char *f1, const char *f2) {
     return true;
   }
 
-  scoped_fixed_array<char, BUF_SIZE> buf1;
-  scoped_fixed_array<char, BUF_SIZE> buf2;
-  scoped_fixed_array<char *, 64> c1;
-  scoped_fixed_array<char *, 64> c2;
+  std::array<char, BUF_SIZE> buf1;
+  std::array<char, BUF_SIZE> buf2;
+  std::array<char *, 64> c1;
+  std::array<char *, 64> c2;
 
-  std::strncpy(buf1.get(), f1, buf1.size());
-  std::strncpy(buf2.get(), f2, buf2.size());
+  std::strncpy(buf1.data(), f1, buf1.size());
+  std::strncpy(buf2.data(), f2, buf2.size());
 
-  const size_t n1 = tokenizeCSV(buf1.get(), c1.get(), c1.size());
-  const size_t n2 = tokenizeCSV(buf2.get(), c2.get(), c2.size());
+  const size_t n1 = tokenizeCSV(buf1.data(), c1.data(), c1.size());
+  const size_t n2 = tokenizeCSV(buf2.data(), c2.data(), c2.size());
   const size_t n  = std::min(n1, n2);
 
   for (size_t i = 0; i < n; ++i) {
@@ -234,7 +233,7 @@ bool is_valid_node(const Lattice *lattice,  N *node) {
       new_node->rlength = unsigned short(begin3 - begin);                                \
       new_node->stat = MECAB_UNK_NODE;                                   \
       new_node->bnext = result_node;                                     \
-      if (unk_feature_.get()) new_node->feature = unk_feature_.get();    \
+      if (unk_feature_.data()) new_node->feature = unk_feature_.data();    \
       if (isPartial && !is_valid_node(lattice, new_node)) { continue; }  \
       result_node = new_node; } } while (0)
 

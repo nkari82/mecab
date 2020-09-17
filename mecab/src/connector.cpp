@@ -5,6 +5,7 @@
 //  Copyright(C) 2004-2006 Nippon Telegraph and Telephone Corporation
 #include <fstream>
 #include <sstream>
+#include <array>
 #include "mecab.h"
 #include "common.h"
 #include "connector.h"
@@ -51,10 +52,10 @@ bool Connector::openText(const char *filename) {
     return false;
   }
   char *column[2];
-  scoped_fixed_array<char, BUF_SIZE> buf;
-  ifs.getline(buf.get(), buf.size());
-  CHECK_DIE(tokenize2(buf.get(), "\t ", column, 2) == 2)
-      << "format error: " << buf.get();
+  std::array<char, BUF_SIZE> buf;
+  ifs.getline(buf.data(), buf.size());
+  CHECK_DIE(tokenize2(buf.data(), "\t ", column, 2) == 2)
+      << "format error: " << buf.data();
   lsize_ = std::atoi(column[0]);
   rsize_ = std::atoi(column[1]);
   return true;
@@ -73,24 +74,21 @@ bool Connector::compile(const char *ifile, const char *ofile) {
 
 
   char *column[4];
-  scoped_fixed_array<char, BUF_SIZE> buf;
+  std::array<char, BUF_SIZE> buf;
 
-  is->getline(buf.get(), buf.size());
+  is->getline(buf.data(), buf.size());
 
-  CHECK_DIE(tokenize2(buf.get(), "\t ", column, 2) == 2)
-      << "format error: " << buf.get();
+  CHECK_DIE(tokenize2(buf.data(), "\t ", column, 2) == 2) << "format error: " << buf.data();
 
   const unsigned short lsize = std::atoi(column[0]);
   const unsigned short rsize = std::atoi(column[1]);
   std::vector<short> matrix(lsize * rsize);
   std::fill(matrix.begin(), matrix.end(), 0);
 
-  std::cout << "reading " << ifile << " ... "
-            << lsize << "x" << rsize << std::endl;
+  std::cout << "reading " << ifile << " ... " << lsize << "x" << rsize << std::endl;
 
-  while (is->getline(buf.get(), buf.size())) {
-    CHECK_DIE(tokenize2(buf.get(), "\t ", column, 3) == 3)
-        << "format error: " << buf.get();
+  while (is->getline(buf.data(), buf.size())) {
+    CHECK_DIE(tokenize2(buf.data(), "\t ", column, 3) == 3) << "format error: " << buf.data();
     const size_t l = std::atoi(column[0]);
     const size_t r = std::atoi(column[1]);
     const int    c = std::atoi(column[2]);
@@ -103,8 +101,7 @@ bool Connector::compile(const char *ifile, const char *ofile) {
   CHECK_DIE(ofs) << "permission denied: " << ofile;
   ofs.write(reinterpret_cast<const char*>(&lsize), sizeof(unsigned short));
   ofs.write(reinterpret_cast<const char*>(&rsize), sizeof(unsigned short));
-  ofs.write(reinterpret_cast<const char*>(&matrix[0]),
-            lsize * rsize * sizeof(short));
+  ofs.write(reinterpret_cast<const char*>(&matrix[0]), lsize * rsize * sizeof(short));
   ofs.close();
 
   return true;

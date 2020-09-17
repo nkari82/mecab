@@ -11,7 +11,6 @@
 #include "dictionary.h"
 #include "char_property.h"
 #include "nbest_generator.h"
-#include "scoped_ptr.h"
 
 namespace MeCab {
 
@@ -36,7 +35,7 @@ class Allocator {
   }
 
   Dictionary::result_type *mutable_results() {
-    return results_.get();
+    return results_.data();
   }
 
   char *alloc(size_t size) {
@@ -85,18 +84,18 @@ class Allocator {
         path_freelist_(0),
         char_freelist_(0),
         nbest_generator_(0),
-        results_(new Dictionary::result_type[kResultsSize]) {}
+        results_(kResultsSize) {}
   virtual ~Allocator() {}
 
  private:
   static const size_t kResultsSize = 512;
   size_t id_;
-  scoped_ptr<FreeList<N> > node_freelist_;
-  scoped_ptr<FreeList<P> > path_freelist_;
-  scoped_ptr<ChunkFreeList<char>  >  char_freelist_;
-  scoped_ptr<NBestGenerator>  nbest_generator_;
+  std::shared_ptr<FreeList<N>> node_freelist_;
+  std::shared_ptr<FreeList<P>> path_freelist_;
+  std::shared_ptr<ChunkFreeList<char>>  char_freelist_;
+  std::shared_ptr<NBestGenerator> nbest_generator_;
   std::vector<char> partial_buffer_;
-  scoped_array<Dictionary::result_type>  results_;
+  std::vector<Dictionary::result_type> results_;
 };
 
 template <typename N, typename P>
@@ -104,8 +103,8 @@ class Tokenizer {
  private:
   std::vector<Dictionary *>              dic_;
   Dictionary                             unkdic_;
-  scoped_string                          bos_feature_;
-  scoped_string                          unk_feature_;
+  std::string                          bos_feature_;
+  std::string                          unk_feature_;
   FreeList<DictionaryInfo>               dictionary_info_freelist_;
   std::vector<std::pair<const Token *, size_t> > unk_tokens_;
   DictionaryInfo                        *dictionary_info_;

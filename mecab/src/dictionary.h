@@ -57,9 +57,7 @@ class Dictionary {
   size_t lsize() const { return static_cast<size_t>(lsize_); }
   size_t rsize() const { return static_cast<size_t>(rsize_); }
 
-  const Token *token(const result_type &n) const {
-    return token_ +(n.value >> 8);
-  }
+  const Token *token(const result_type &n) const;
   size_t token_size(const result_type &n) const { return 0xff & n.value; }
   const char *feature(const Token &t) const;
 
@@ -82,8 +80,8 @@ class Dictionary {
  private:
   macab_io_file_t     io_;
   file_handle_t        handle_;
-  const Token        *token_;
-  const char         *feature_;
+  IMMap::Ptr			token_;
+  IMMap::Ptr			feature_;
   const char         *charset_;
   unsigned int        version_;
   unsigned int        type_;

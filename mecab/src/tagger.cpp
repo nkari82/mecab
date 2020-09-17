@@ -6,12 +6,12 @@
 #include <cstring>
 #include <iostream>
 #include <iterator>
+#include <array>
 #include "mecab.h"
 #include "common.h"
 #include "connector.h"
 #include "nbest_generator.h"
 #include "param.h"
-#include "scoped_ptr.h"
 #include "stream_wrapper.h"
 #include "string_buffer.h"
 #include "thread.h"
@@ -143,7 +143,7 @@ class ModelImpl: public Model {
 
  private:
   Viterbi            *viterbi_;
-  scoped_ptr<Writer>  writer_;
+  std::shared_ptr<Writer>  writer_;
   int                 request_type_;
   double              theta_;
 
@@ -217,8 +217,8 @@ class TaggerImpl: public Tagger {
   }
 
   const ModelImpl          *current_model_;
-  scoped_ptr<ModelImpl>     model_;
-  scoped_ptr<Lattice>       lattice_;
+  std::shared_ptr<ModelImpl>     model_;
+  std::shared_ptr<Lattice>       lattice_;
   int                       request_type_;
   double                    theta_;
   std::string               what_;
@@ -321,8 +321,8 @@ class LatticeImpl : public Lattice {
   std::vector<const char *>   feature_constraint_;
   std::vector<unsigned char>  boundary_constraint_;
   const Writer               *writer_;
-  scoped_ptr<StringBuffer>    ostrs_;
-  scoped_ptr<Allocator<Node, Path> > allocator_;
+  std::shared_ptr<StringBuffer>    ostrs_;
+  std::shared_ptr<Allocator<Node, Path> > allocator_;
 
   StringBuffer *stream() {
     if (!ostrs_.get()) {
@@ -384,7 +384,7 @@ bool ModelImpl::open(const Param &param, macab_io_file_t *io) {
 }
 
 bool ModelImpl::swap(Model *model) {
-  scoped_ptr<Model> model_data(model);
+  std::shared_ptr<Model> model_data(model);
 
   if (!is_available()) {
     setGlobalError("current model is not available");
@@ -456,7 +456,7 @@ const char *TaggerImpl::what() const {
 bool TaggerImpl::open(int argc, char **argv) {
   model_.reset(new ModelImpl);
   if (!model_->open(argc, argv)) {
-    model_.reset(0);
+    model_.reset();
     return false;
   }
   current_model_ = model_.get();
@@ -468,7 +468,7 @@ bool TaggerImpl::open(int argc, char **argv) {
 bool TaggerImpl::open(const char *arg, macab_io_file_t *io) {
   model_.reset(new ModelImpl);
   if (!model_->open(arg, io)) {
-    model_.reset(0);
+    model_.reset();
     return false;
   }
   current_model_ = model_.get();
@@ -481,7 +481,7 @@ bool TaggerImpl::open(const ModelImpl &model) {
   if (!model.is_available()) {
     return false;
   }
-  model_.reset(0);
+  model_.reset();
   current_model_ = &model;
   request_type_ = current_model_->request_type();
   theta_        = current_model_->theta();
@@ -1114,7 +1114,7 @@ const char *Model::version() {
 }
 
 bool Tagger::parse(const Model &model, Lattice *lattice) {
-  scoped_ptr<Tagger> tagger(model.createTagger());
+  std::shared_ptr<Tagger> tagger(model.createTagger());
   return tagger->parse(lattice);
 }
 
@@ -1163,7 +1163,7 @@ int mecab_do(int argc, char **argv, macab_io_file_t *io) {
               << "use --marginal or --nbest." << std::endl;
   }
 
-  MeCab::scoped_ptr<MeCab::ModelImpl> model(new MeCab::ModelImpl);
+  std::shared_ptr<MeCab::ModelImpl> model(new MeCab::ModelImpl);
   if (!model->open(param, io)) {
     std::cout << MeCab::getLastError() << std::endl;
     return EXIT_FAILURE;
@@ -1221,10 +1221,10 @@ int mecab_do(int argc, char **argv, macab_io_file_t *io) {
     ibufsize *= 8;
   }
 
-  MeCab::scoped_array<char> ibuf_data(new char[ibufsize]);
-  char *ibuf = ibuf_data.get();
+  std::vector<char> ibuf_data(ibufsize);
+  char *ibuf = ibuf_data.data();
 
-  MeCab::scoped_ptr<MeCab::Tagger> tagger(model->createTagger());
+  std::shared_ptr<MeCab::Tagger> tagger(model->createTagger());
 
   if (!tagger.get()) {
     WHAT_ERROR("cannot create tagger");
@@ -1241,15 +1241,15 @@ int mecab_do(int argc, char **argv, macab_io_file_t *io) {
         ifs->getline(ibuf, ibufsize);
       } else {
         std::string sentence;
-        MeCab::scoped_fixed_array<char, BUF_SIZE> line;
+        std::array<char, BUF_SIZE> line;
         for (;;) {
-          if (!ifs->getline(line.get(), line.size())) {
+          if (!ifs->getline(line.data(), line.size())) {
             ifs->clear(std::ios::eofbit|std::ios::badbit);
             break;
           }
-          sentence += line.get();
+          sentence += line.data();
           sentence += '\n';
-          if (std::strcmp(line.get(), "EOS") == 0 || line[0] == '\0') {
+          if (std::strcmp(line.data(), "EOS") == 0 || line[0] == '\0') {
             break;
           }
         }

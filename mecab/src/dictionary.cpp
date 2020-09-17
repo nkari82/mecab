@@ -5,6 +5,7 @@
 //  Copyright(C) 2004-2006 Nippon Telegraph and Telephone Corporation
 #include <fstream>
 #include <climits>
+#include <array>
 #include "mecab.h"
 #include "common.h"
 #include "freelist.h"
@@ -80,53 +81,50 @@ bool Dictionary::open(const char *file, const char *mode, macab_io_file_t *io) {
   close();
   io_ = io ? *io : *default_io();
   filename_.assign(file);
-  const char *ptr(nullptr);
+  const char *mapped(nullptr);
   const char *end(nullptr);
   size_t length(0);
-  CHECK_FALSE(handle_ = io_.open(file, mode, &length, (void**)&ptr))
-	  << "no such file or directory: " << file;
+  CHECK_FALSE(handle_ = io_.open(file, mode, &length, (void**)&mapped)) << "no such file or directory: " << file;
+  CHECK_FALSE(length >= 100) << "dictionary file is broken: " << file;
 
-  CHECK_FALSE(length >= 100)
-	  << "dictionary file is broken: " << file;
-
-  end = ptr + length;
+  std::shared_ptr<IMMap> ptr;
+  ptr.reset(mapped != nullptr ? new MMap((char*)mapped) : nullptr);
+  
+  //end = *ptr + length;
 
   unsigned int dsize;
   unsigned int tsize;
   unsigned int fsize;
   unsigned int magic;
   unsigned int dummy;
+  
+  ptr->read(&magic, sizeof(unsigned int));
+  CHECK_FALSE((magic ^ DictionaryMagicID) == length) << "dictionary file is broken: " << file;
 
-  read_static<unsigned int>(&ptr, magic);
-  CHECK_FALSE((magic ^ DictionaryMagicID) == length)
-      << "dictionary file is broken: " << file;
+  ptr->read(&version_, sizeof(unsigned int));
+  CHECK_FALSE(version_ == DIC_VERSION) << "incompatible version: " << version_;
 
-  read_static<unsigned int>(&ptr, version_);
-  CHECK_FALSE(version_ == DIC_VERSION)
-      << "incompatible version: " << version_;
+  ptr->read(&type_, sizeof(unsigned int));
+  ptr->read(&lexsize_, sizeof(unsigned int));
+  ptr->read(&lsize_, sizeof(unsigned int));
+  ptr->read(&rsize_, sizeof(unsigned int));
+  ptr->read(&dsize, sizeof(unsigned int));
+  ptr->read(&tsize, sizeof(unsigned int));
+  ptr->read(&fsize, sizeof(unsigned int));
+  ptr->read(&dummy, sizeof(unsigned int));
 
-  read_static<unsigned int>(&ptr, type_);
-  read_static<unsigned int>(&ptr, lexsize_);
-  read_static<unsigned int>(&ptr, lsize_);
-  read_static<unsigned int>(&ptr, rsize_);
-  read_static<unsigned int>(&ptr, dsize);
-  read_static<unsigned int>(&ptr, tsize);
-  read_static<unsigned int>(&ptr, fsize);
-  read_static<unsigned int>(&ptr, dummy);
+  charset_ = (const char*)ptr->data();
+  *ptr += 32;
+  da_.set_array(reinterpret_cast<void *>(ptr->data()));
+  *ptr += dsize;
 
-  charset_ = ptr;
-  ptr += 32;
-  da_.set_array(reinterpret_cast<void *>(const_cast<char*>(ptr)));
-  ptr += dsize;
+  token_ = ptr->clone();
+  *ptr += tsize;
 
-  token_ = reinterpret_cast<const Token *>(ptr);
-  ptr += tsize;
+  feature_ = ptr->clone();
+  *ptr += fsize;
 
-  feature_ = ptr;
-  ptr += fsize;
-
-  CHECK_FALSE(ptr == end)
-      << "dictionary file is broken: " << file;
+  //CHECK_FALSE(ptr.get() == end) << "dictionary file is broken: " << file;
 
   return true;
 }
@@ -202,11 +200,11 @@ bool Dictionary::assignUserDictionaryCosts(
     std::ifstream ifs(WPATH(dics[i].c_str()));
     CHECK_DIE(ifs) << "no such file or directory: " << dics[i];
     std::cout << "reading " << dics[i] << " ... ";
-    scoped_fixed_array<char, BUF_SIZE> line;
-    while (ifs.getline(line.get(), line.size())) {
+    std::array<char, BUF_SIZE> line;
+    while (ifs.getline(line.data(), line.size())) {
       char *col[8];
-      const size_t n = tokenizeCSV(line.get(), col, 5);
-      CHECK_DIE(n == 5) << "format error: " << line.get();
+      const size_t n = tokenizeCSV(line.data(), col, 5);
+      CHECK_DIE(n == 5) << "format error: " << line.data();
       std::string w = col[0];
       const std::string feature = col[4];
       const int cost = calcCost(w, feature, factor,
@@ -227,23 +225,33 @@ bool Dictionary::assignUserDictionaryCosts(
   return true;
 }
 
+const Token *Dictionary::token(const result_type &n) const
+{
+	size_t pos = sizeof(Token) * (n.value >> 8);
+	Token* token(nullptr);
+	token_->read((void**)&token, pos, sizeof(Token));
+	return token;
+}
+
 const char *Dictionary::feature(const Token &t) const
 {
-	return feature_ + t.feature;
+	char* str(nullptr);
+	feature_->read((char**)&str, t.feature);
+	return str;
 }
 
 bool Dictionary::compile(const Param &param,
                          const std::vector<std::string> &dics,
                          const char *output) {
   Connector matrix;
-  scoped_ptr<DictionaryRewriter> rewrite;
-  scoped_ptr<POSIDGenerator> posid;
-  scoped_ptr<DecoderFeatureIndex> fi;
-  scoped_ptr<ContextID> cid;
-  scoped_ptr<Writer> writer;
-  scoped_ptr<Lattice> lattice;
-  scoped_ptr<StringBuffer> os;
-  scoped_ptr<CharProperty> property;
+  std::shared_ptr<DictionaryRewriter> rewrite;
+  std::shared_ptr<POSIDGenerator> posid;
+  std::shared_ptr<DecoderFeatureIndex> fi;
+  std::shared_ptr<ContextID> cid;
+  std::shared_ptr<Writer> writer;
+  std::shared_ptr<Lattice> lattice;
+  std::shared_ptr<StringBuffer> os;
+  std::shared_ptr<CharProperty> property;
   Node node;
 
   const std::string dicdir = param.get<std::string>("dicdir");
@@ -319,13 +327,13 @@ bool Dictionary::compile(const Param &param,
 
     std::cout << "reading " << dics[i] << " ... ";
 
-    scoped_fixed_array<char, BUF_SIZE> line;
+    std::array<char, BUF_SIZE> line;
     size_t num = 0;
 
-    while (is->getline(line.get(), line.size())) {
+    while (is->getline(line.data(), line.size())) {
       char *col[8];
-      const size_t n = tokenizeCSV(line.get(), col, 5);
-      CHECK_DIE(n == 5) << "format error: " << line.get();
+      const size_t n = tokenizeCSV(line.data(), col, 5);
+      CHECK_DIE(n == 5) << "format error: " << line.data();
 
       std::string w = col[0];
       int lid = toInt(col[1]);

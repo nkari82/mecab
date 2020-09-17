@@ -44,8 +44,8 @@ class Viterbi {
   static bool buildAllLattice(Lattice *lattice);
   static bool buildAlternative(Lattice *lattice);
 
-  scoped_ptr<Tokenizer<Node, Path> > tokenizer_;
-  scoped_ptr<Connector> connector_;
+  std::shared_ptr<Tokenizer<Node, Path> > tokenizer_;
+  std::shared_ptr<Connector> connector_;
   int                   cost_factor_;
   whatlog               what_;
 };

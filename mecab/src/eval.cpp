@@ -8,11 +8,11 @@
 #include <iostream>
 #include <map>
 #include <vector>
+#include <array>
 #include "mecab.h"
 #include "common.h"
 #include "param.h"
 #include "stream_wrapper.h"
-#include "scoped_ptr.h"
 #include "utils.h"
 
 namespace MeCab {
@@ -27,16 +27,16 @@ class Eval {
     }
 
     char *col[2];
-    scoped_fixed_array<char, BUF_SIZE> buf;
-    scoped_fixed_array<char *, BUF_SIZE> csv;
+    std::array<char, BUF_SIZE> buf;
+    std::array<char *, BUF_SIZE> csv;
     r->clear();
-    while (is->getline(buf.get(), buf.size())) {
-      if (std::strcmp(buf.get(), "EOS") == 0) {
+    while (is->getline(buf.data(), buf.size())) {
+      if (std::strcmp(buf.data(), "EOS") == 0) {
         break;
       }
-      CHECK_DIE(tokenize(buf.get(), "\t", col,  2) == 2) << "format error";
+      CHECK_DIE(tokenize(buf.data(), "\t", col,  2) == 2) << "format error";
       csv[0] = col[0];
-      size_t n = tokenizeCSV(col[1], csv.get() + 1, csv.size() - 1);
+      size_t n = tokenizeCSV(col[1], csv.data() + 1, csv.size() - 1);
       std::vector<std::string> tmp;
       for (size_t i = 0; i < level.size(); ++i) {
         size_t m = level[i] < 0 ? n : level[i];
@@ -58,11 +58,11 @@ class Eval {
 
   static bool parseLevel(const char *level_str,
                          std::vector<int> *level) {
-    scoped_fixed_array<char, BUF_SIZE> buf;
-    scoped_fixed_array<char *, 512> col;
-    std::strncpy(buf.get(), level_str, buf.size());
+    std::array<char, BUF_SIZE> buf;
+    std::array<char *, 512> col;
+    std::strncpy(buf.data(), level_str, buf.size());
     level->clear();
-    size_t n = tokenize2(buf.get(), "\t ", col.get(), col.size());
+    size_t n = tokenize2(buf.data(), "\t ", col.data(), col.size());
     for (size_t i = 0; i < n; ++i) {
       level->push_back(std::atoi(col[i]));
     }
@@ -73,8 +73,8 @@ class Eval {
     double pr = (p == 0) ? 0 : 100.0 * c/p;
     double re = (r == 0) ? 0 : 100.0 * c/r;
     double F = ((pr + re) == 0.0) ? 0 : 2 * pr * re /(pr + re);
-    scoped_fixed_array<char, BUF_SIZE> buf;
-    sprintf(buf.get(), "%4.4f(%d/%d) %4.4f(%d/%d) %4.4f\n",
+    std::array<char, BUF_SIZE> buf;
+    sprintf(buf.data(), "%4.4f(%d/%d) %4.4f(%d/%d) %4.4f\n",
             pr,
             static_cast<int>(c),
             static_cast<int>(p),
@@ -82,7 +82,7 @@ class Eval {
             static_cast<int>(c),
             static_cast<int>(r),
             F);
-    *os << buf.get();
+    *os << buf.data();
   }
 
  public:
@@ -235,15 +235,15 @@ class TestSentenceGenerator {
     MeCab::ostream_wrapper ofs(output.c_str());
     CHECK_DIE(*ofs) << "permission denied: " << output;
 
-    scoped_fixed_array<char, BUF_SIZE> buf;
+    std::array<char, BUF_SIZE> buf;
     char *col[2];
     std::string str;
     for (size_t i = 0; i < files.size(); ++i) {
       MeCab::istream_wrapper ifs(files[i].c_str());
       CHECK_DIE(*ifs) << "no such file or directory: " << files[i];
-      while (ifs->getline(buf.get(), buf.size())) {
-        const size_t n = tokenize(buf.get(), "\t ", col, 2);
-        CHECK_DIE(n <= 2) << "format error: " << buf.get();
+      while (ifs->getline(buf.data(), buf.size())) {
+        const size_t n = tokenize(buf.data(), "\t ", col, 2);
+        CHECK_DIE(n <= 2) << "format error: " << buf.data();
         if (std::strcmp(col[0], "EOS") == 0 && !str.empty()) {
           *ofs << str << std::endl;
           str.clear();

@@ -5,6 +5,7 @@
 //  Copyright(C) 2004-2006 Nippon Telegraph and Telephone Corporation
 #include <cstdio>
 #include <fstream>
+#include <array>
 #include "mecab.h"
 #include "common.h"
 #include "param.h"
@@ -191,13 +192,13 @@ void Param::clear() {
 }
 
 bool Param::open(const char *arg, const Option *opts) {
-  scoped_fixed_array<char, BUF_SIZE> str;
-  std::strncpy(str.get(), arg, str.size());
+  std::array<char, BUF_SIZE> str;
+  std::strncpy(str.data(), arg, str.size());
   char* ptr[64];
   unsigned int size = 1;
   ptr[0] = const_cast<char*>(PACKAGE);
 
-  for (char *p = str.get(); *p;) {
+  for (char *p = str.data(); *p;) {
     while (isspace(*p)) *p++ = '\0';
     if (*p == '\0') break;
     ptr[size++] = p;

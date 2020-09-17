@@ -8,6 +8,7 @@
 #include <set>
 #include <string>
 #include <sstream>
+#include <array>
 #include "mecab.h"
 #include "common.h"
 #include "param.h"
@@ -134,8 +135,8 @@ int CharProperty::id(const char *key) const {
 bool CharProperty::compile(const char *cfile,
                            const char *ufile,
                            const char *ofile) {
-  scoped_fixed_array<char, BUF_SIZE> line;
-  scoped_fixed_array<char *, 512> col;
+  std::array<char, BUF_SIZE> line;
+  std::array<char *, 512> col;
   size_t id = 0;
   std::vector<Range> range;
   std::map<std::string, CharInfo> category;
@@ -150,12 +151,12 @@ bool CharProperty::compile(const char *cfile,
     is = &iss;
   }
 
-  while (is->getline(line.get(), line.size())) {
-    if (std::strlen(line.get()) == 0 || line[0] == '#') {
+  while (is->getline(line.data(), line.size())) {
+    if (std::strlen(line.data()) == 0 || line[0] == '#') {
       continue;
     }
-    const size_t size = tokenize2(line.get(), "\t ", col.get(), col.size());
-    CHECK_DIE(size >= 2) << "format error: " << line.get();
+    const size_t size = tokenize2(line.data(), "\t ", col.data(), col.size());
+    CHECK_DIE(size >= 2) << "format error: " << line.data();
 
     // 0xFFFF..0xFFFF hoge hoge hgoe #
     if (std::strncmp(col[0], "0x", 2) == 0) {
@@ -189,7 +190,7 @@ bool CharProperty::compile(const char *cfile,
       }
       range.push_back(r);
     } else {
-      CHECK_DIE(size >= 4) << "format error: " << line.get();
+      CHECK_DIE(size >= 4) << "format error: " << line.data();
 
       std::string key = col[0];
       CHECK_DIE(category.find(key) == category.end())
@@ -226,9 +227,9 @@ bool CharProperty::compile(const char *cfile,
   }
 
   std::set<std::string> unk;
-  while (is2->getline(line.get(), line.size())) {
-    const size_t n = tokenizeCSV(line.get(), col.get(), 2);
-    CHECK_DIE(n >= 1) << "format error: " << line.get();
+  while (is2->getline(line.data(), line.size())) {
+    const size_t n = tokenizeCSV(line.data(), col.data(), 2);
+    CHECK_DIE(n >= 1) << "format error: " << line.data();
     const std::string key = col[0];
     CHECK_DIE(category.find(key) != category.end())
         << "category [" << key << "] is undefined in " << cfile;

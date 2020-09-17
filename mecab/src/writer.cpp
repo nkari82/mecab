@@ -7,6 +7,7 @@
 #include <cstring>
 #include <fstream>
 #include <iostream>
+#include <array>
 #include "mecab.h"
 #include "common.h"
 #include "param.h"
@@ -97,11 +98,11 @@ bool Writer::open(const Param &param) {
       if (eon_format != eon_format2) {
         eon_format = eon_format2;
       }
-      node_format_.reset_string(node_format.c_str());
-      bos_format_.reset_string(bos_format.c_str());
-      eos_format_.reset_string(eos_format.c_str());
-      unk_format_.reset_string(unk_format.c_str());
-      eon_format_.reset_string(eon_format.c_str());
+      node_format_ = node_format.c_str();
+      bos_format_ = bos_format.c_str();
+      eos_format_ = eos_format.c_str();
+      unk_format_ = unk_format.c_str();
+      eon_format_ = eon_format.c_str();
     }
   }
 
@@ -200,18 +201,18 @@ bool Writer::writeDump(Lattice *lattice, StringBuffer *os) const {
 }
 
 bool Writer::writeUser(Lattice *lattice, StringBuffer *os) const {
-  if (!writeNode(lattice, bos_format_.get(), lattice->bos_node(), os)) {
+  if (!writeNode(lattice, bos_format_.data(), lattice->bos_node(), os)) {
     return false;
   }
   const Node *node = 0;
   for (node = lattice->bos_node()->next; node->next; node = node->next) {
-    const char *fmt = (node->stat == MECAB_UNK_NODE ? unk_format_.get() :
-                       node_format_.get());
+    const char *fmt = (node->stat == MECAB_UNK_NODE ? unk_format_.data() :
+                       node_format_.data());
     if (!writeNode(lattice, fmt, node, os)) {
       return false;
     }
   }
-  if (!writeNode(lattice, eos_format_.get(), node, os)) {
+  if (!writeNode(lattice, eos_format_.data(), node, os)) {
     return false;
   }
   return true;
@@ -221,15 +222,15 @@ bool Writer::writeNode(Lattice *lattice, const Node *node,
                        StringBuffer *os) const {
   switch (node->stat) {
     case MECAB_BOS_NODE:
-      return writeNode(lattice, bos_format_.get(), node, os);
+      return writeNode(lattice, bos_format_.data(), node, os);
     case MECAB_EOS_NODE:
-      return writeNode(lattice, eos_format_.get(), node, os);
+      return writeNode(lattice, eos_format_.data(), node, os);
     case MECAB_UNK_NODE:
-      return writeNode(lattice, unk_format_.get(), node, os);
+      return writeNode(lattice, unk_format_.data(), node, os);
     case MECAB_NOR_NODE:
-      return writeNode(lattice, node_format_.get(), node, os);
+      return writeNode(lattice, node_format_.data(), node, os);
     case MECAB_EON_NODE:
-      return writeNode(lattice, eon_format_.get(), node, os);
+      return writeNode(lattice, eon_format_.data(), node, os);
   }
   return true;
 }
@@ -238,8 +239,8 @@ bool Writer::writeNode(Lattice *lattice,
                        const char *p,
                        const Node *node,
                        StringBuffer *os) const {
-  scoped_fixed_array<char, BUF_SIZE> buf;
-  scoped_fixed_array<char *, 64> ptr;
+  std::array<char, BUF_SIZE> buf;
+  std::array<char *, 64> ptr;
   size_t psize = 0;
 
   for (; *p; p++) {
@@ -350,8 +351,8 @@ bool Writer::writeNode(Lattice *lattice,
               return false;
             }
             if (!psize) {
-              std::strncpy(buf.get(), node->feature, buf.size());
-              psize = tokenizeCSV(buf.get(), ptr.get(), ptr.size());
+              std::strncpy(buf.data(), node->feature, buf.size());
+              psize = tokenizeCSV(buf.data(), ptr.data(), ptr.size());
             }
 
             // separator

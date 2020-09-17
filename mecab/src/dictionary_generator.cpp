@@ -8,6 +8,7 @@
 #include <map>
 #include <vector>
 #include <string>
+#include <array>
 #include "mecab.h"
 #include "common.h"
 #include "param.h"
@@ -52,14 +53,14 @@ class DictionaryGenerator {
                      ContextID *cid) {
     std::ifstream ifs(WPATH(filename));
     CHECK_DIE(ifs) << "no such file or directory: " << filename;
-    scoped_fixed_array<char, BUF_SIZE> line;
+    std::array<char, BUF_SIZE> line;
     std::cout << "reading " << filename << " ... " << std::flush;
     size_t num = 0;
     std::string feature, ufeature, lfeature, rfeature;
     char *col[8];
-    while (ifs.getline(line.get(), line.size())) {
-      const size_t n = tokenizeCSV(line.get(), col, 5);
-      CHECK_DIE(n == 5) << "format error: " << line.get();
+    while (ifs.getline(line.data(), line.size())) {
+      const size_t n = tokenizeCSV(line.data(), col, 5);
+      CHECK_DIE(n == 5) << "format error: " << line.data();
       feature = col[4];
       rewrite->rewrite2(feature, &ufeature, &lfeature, &rfeature);
       cid->add(lfeature.c_str(), rfeature.c_str());
@@ -138,13 +139,13 @@ class DictionaryGenerator {
     path.lnode  = &lnode;
     path.rnode  = &rnode;
 
-    scoped_fixed_array<char, BUF_SIZE> line;
+    std::array<char, BUF_SIZE> line;
     char *col[8];
     size_t num = 0;
 
-    while (ifs.getline(line.get(), line.size())) {
-      const size_t n = tokenizeCSV(line.get(), col, 5);
-      CHECK_DIE(n == 5) << "format error: " << line.get();
+    while (ifs.getline(line.data(), line.size())) {
+      const size_t n = tokenizeCSV(line.data(), col, 5);
+      CHECK_DIE(n == 5) << "format error: " << line.data();
 
       std::string w = std::string(col[0]);
       const std::string feature = std::string(col[4]);
@@ -163,9 +164,7 @@ class DictionaryGenerator {
         path.rnode->char_type = static_cast<unsigned char>(c);
       } else {
         size_t mblen = 0;
-        const CharInfo cinfo = property.getCharInfo(w.c_str(),
-                                                    w.c_str() + w.size(),
-                                                    &mblen);
+        const CharInfo cinfo = property.getCharInfo(w.c_str(), w.c_str() + w.size(), &mblen);
         path.rnode->char_type = cinfo.default_type;
       }
 

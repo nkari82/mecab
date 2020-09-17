@@ -10,7 +10,6 @@
 #include <string>
 #include <vector>
 #include <sstream>
-#include "scoped_ptr.h"
 #include "common.h"
 
 namespace {
@@ -20,7 +19,7 @@ Target lexical_cast(Source arg) {
   Target result;
   if (!(interpreter << arg) || !(interpreter >> result) ||
       !(interpreter >> std::ws).eof()) {
-    MeCab::scoped_ptr<Target> r(new Target());  // return default value
+    std::shared_ptr<Target> r(new Target());  // return default value
     return *r;
   }
   return result;
@@ -68,7 +67,7 @@ class Param {
   T get(const char *key) const {
     std::map<std::string, std::string>::const_iterator it = conf_.find(key);
     if (it == conf_.end()) {
-      scoped_ptr<T> r(new T());
+      std::shared_ptr<T> r(new T());
       return *r;
     }
     return lexical_cast<T, std::string>(it->second);
