@@ -32,18 +32,18 @@ class Connector {
   void set_left_size(size_t lsize)  { lsize_ = (unsigned short)lsize; }
   void set_right_size(size_t rsize) { rsize_ = (unsigned short)rsize; }
 
-  inline int transition_cost(unsigned short rcAttr,
-                             unsigned short lcAttr) const {
+  inline int transition_cost(unsigned short rcAttr, unsigned short lcAttr) const {
     return matrix_[rcAttr + lsize_ * lcAttr];
   }
 
   inline int cost(const Node *lNode, const Node *rNode) const {
-    return matrix_[lNode->rcAttr + lsize_ * rNode->lcAttr] + rNode->wcost;
+	int pos = lNode->rcAttr + lsize_ * rNode->lcAttr;
+    return matrix_[pos] + rNode->wcost;
   }
 
   // access to raw matrix
-  short *mutable_matrix() { return &matrix_[0]; }
-  const short *matrix() const { return &matrix_[0]; }
+  short *mutable_matrix();
+  const short *matrix() const;
 
   bool openText(const char *filename);
   bool open(const char *filename, const char *mode = "r", macab_io_file_t *io = nullptr);

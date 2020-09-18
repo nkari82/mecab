@@ -37,9 +37,9 @@ bool Connector::open(const char* filename, const char *mode, macab_io_file_t *io
 
   matrix_ = (short*)ptr->data();
 
+  // check valid
   CHECK_FALSE(matrix_) << "matrix is NULL";
   CHECK_FALSE((length/sizeof(short)) >= 2) << "file size is invalid: " << filename;
-
   CHECK_FALSE(static_cast<size_t>(lsize_ * rsize_ + 2) == (length / sizeof(short))) << "file size is invalid: " << filename;
 
   return true;
@@ -48,6 +48,16 @@ bool Connector::open(const char* filename, const char *mode, macab_io_file_t *io
 void Connector::close() {
   if (io_.close != nullptr)
 	 io_.close(handle_);
+}
+
+short * Connector::mutable_matrix()
+{
+	return &matrix_[0];
+}
+
+const short * Connector::matrix() const
+{
+	return &matrix_[0];
 }
 
 bool Connector::openText(const char *filename) {
