@@ -215,14 +215,14 @@ namespace MeCab {
 	char* FileMap::data(size_t size)
 	{
 		char* val(nullptr);
-		read(orig_ + relative_, (void**)&val, size);
+		read(0, (void**)&val, size);
 		return val;
 	}
 
 	char* FileMap::data()
 	{
 		char* val(nullptr);
-		read(orig_ + relative_, (void**)&val, size_ - relative_);
+		read(0, (void**)&val, size_ - relative_);
 		return val;
 	}
 
@@ -299,11 +299,19 @@ namespace MeCab {
 
 	char* MMap::data()
 	{
+#if defined(_DEBUG)
+		auto remain = size_ - relative_;
+		(void)remain; // unused
+#endif
 		return orig_ + relative_;
 	}
 
 	char* MMap::data(size_t size)
 	{
+#if defined(_DEBUG)
+		auto remain = size_ - relative_;
+		(void)remain; // unused
+#endif
 		return orig_ + relative_;
 	}
 
