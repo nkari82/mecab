@@ -1,0 +1,4 @@
+[submodule "mecab/thirdparty/robin-hood-hashing"]
+	path = mecab/thirdparty/robin-hood-hashing
+	url = https://github.com/martinus/robin-hood-hashing.git
+	branch = master
