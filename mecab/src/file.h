@@ -1,10 +1,6 @@
 #ifndef MECAB_FILE_H_
 #define MECAB_FILE_H_
 
-#include <iosfwd>
-#include <streambuf>
-#include <memory>
-
 namespace MeCab {
 
 	macab_io_file_t* default_io();
