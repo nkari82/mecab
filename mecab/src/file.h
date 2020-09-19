@@ -3,7 +3,6 @@
 
 namespace MeCab {
 
-	macab_io_file_t* default_io();
 	const char* default_io_what();
 
 	class iobuf : public std::streambuf

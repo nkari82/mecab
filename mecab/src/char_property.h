@@ -23,8 +23,8 @@ struct CharInfo {
 
 class CharProperty {
  public:
-  bool open(const Param &, macab_io_file_t*);
-  bool open(const char*, macab_io_file_t*);
+  bool open(const Param &);
+  bool open(const char*);
   void close();
   size_t size() const;
   void set_charset(const char *charset);
@@ -76,11 +76,11 @@ class CharProperty {
 
   static bool compile(const char *, const char *, const char*);
 
-  CharProperty(): io_{0}, handle_(0), map_(0), charset_(0) {}
+  CharProperty(macab_io_file_t *io/* = mecab_default_io()*/);
   virtual ~CharProperty() { this->close(); }
 
  private:
-  macab_io_file_t io_;
+  macab_io_file_t *io_;
   file_handle_t handle_;
   std::vector<std::string>  clist_;
   const CharInfo            *map_;

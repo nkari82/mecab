@@ -80,7 +80,7 @@ class EncoderFeatureIndex: public FeatureIndex {
 
 class DecoderFeatureIndex: public FeatureIndex {
  public:
-  DecoderFeatureIndex() : io_{0}, handle_(0) {}
+  DecoderFeatureIndex(macab_io_file_t *io) : io_(io), handle_(0) {}
 
   bool open(const Param &param);
   void clear();
@@ -97,7 +97,7 @@ class DecoderFeatureIndex: public FeatureIndex {
   bool openTextModel(const Param &param);
   int id(const char *key);
 
-  macab_io_file_t io_;
+  macab_io_file_t *io_;
   file_handle_t handle_;
   std::string model_buffer_;
   const uint64_t *key_;

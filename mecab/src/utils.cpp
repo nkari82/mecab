@@ -367,7 +367,7 @@ bool load_dictionary_resource(Param *param, macab_io_file_t *io) {
     rcfile = MECAB_DEFAULT_RC;
   }
 
-  if (!param->load(rcfile.c_str(), io)) {
+  if (!param->load(rcfile.c_str())) {
     return false;
   }
 
@@ -380,7 +380,7 @@ bool load_dictionary_resource(Param *param, macab_io_file_t *io) {
   param->set<std::string>("dicdir", dicdir, true);
   dicdir = create_filename(dicdir, DICRC);
 
-  if (!param->load(dicdir.c_str(), io)) {
+  if (!param->load(dicdir.c_str())) {
     return false;
   }
 

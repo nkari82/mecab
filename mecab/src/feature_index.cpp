@@ -158,14 +158,13 @@ bool DecoderFeatureIndex::openFromArray(const char *begin, const char *end) {
 }
 
 bool DecoderFeatureIndex::openBinaryModel(const Param &param) {
-  io_ = *default_io();
   const std::string modelfile = param.get<std::string>("model");
   const char *ptr(nullptr);
   size_t length(0);
-  CHECK_DIE((handle_ = io_.open(modelfile.c_str(), "r", &length, (void**)&ptr))) << default_io_what();
+  CHECK_DIE((handle_ = io_->open(modelfile.c_str(), "r", &length, (void**)&ptr))) << default_io_what();
 
   if (!openFromArray(ptr, ptr + length)) {
-	io_.close(handle_);
+	io_->close(handle_);
     return false;
   }
   const std::string to = param.get<std::string>("charset");
@@ -203,8 +202,8 @@ void EncoderFeatureIndex::close() {
 }
 
 void DecoderFeatureIndex::close() {
-  if (io_.close != nullptr)
-	 io_.close(handle_);
+  if (io_ != nullptr && io_->close != nullptr)
+	 io_->close(handle_);
   model_buffer_.clear();
   maxid_ = 0;
 }

@@ -366,6 +366,9 @@ extern "C" {
 #ifndef SWIG
   /* C interface */
 
+
+  MECAB_DLL_EXTERN macab_io_file_t* mecab_default_io();
+
   /* old mecab interface */
   /**
    * C wrapper of MeCab::Tagger::create(argc, argv)
@@ -375,7 +378,7 @@ extern "C" {
   /**
    * C wrapper of MeCab::Tagger::create(arg)
    */
-  MECAB_DLL_EXTERN mecab_t*      mecab_new2(const char *arg, macab_io_file_t *io = nullptr);
+  MECAB_DLL_EXTERN mecab_t*      mecab_new2(const char *arg);
 
   /**
    * C wrapper of MeCab::Tagger::version()
@@ -757,7 +760,7 @@ extern "C" {
                                                     mecab_lattice_t *lattice);
 
   /* static functions */
-  MECAB_DLL_EXTERN int           mecab_do(int argc, char **argv, macab_io_file_t *io = nullptr);
+  MECAB_DLL_EXTERN int           mecab_do(int argc, char **argv);
   MECAB_DLL_EXTERN int           mecab_dict_index(int argc, char **argv);
   MECAB_DLL_EXTERN int           mecab_dict_gen(int argc, char **argv);
   MECAB_DLL_EXTERN int           mecab_cost_train(int argc, char **argv);
@@ -1452,22 +1455,22 @@ MECAB_DLL_EXTERN Lattice     *createLattice();
 /**
  * Alias of Mode::create(argc, argv)
  */
-MECAB_DLL_EXTERN Model       *createModel(int argc, char **argv);
+MECAB_DLL_EXTERN Model       *createModel(int argc, char **argv, macab_io_file_t *io = mecab_default_io());
 
 /**
  * Alias of Mode::create(arg)
  */
-MECAB_DLL_EXTERN Model       *createModel(const char *arg, macab_io_file_t *io = nullptr);
+MECAB_DLL_EXTERN Model       *createModel(const char *arg, macab_io_file_t *io = mecab_default_io());
 
 /**
  * Alias of Tagger::create(argc, argv)
  */
-MECAB_DLL_EXTERN Tagger      *createTagger(int argc, char **argv);
+MECAB_DLL_EXTERN Tagger      *createTagger(int argc, char **argv, macab_io_file_t *io = mecab_default_io());
 
 /**
  * Alias of Tagger::create(arg)
  */
-MECAB_DLL_EXTERN Tagger      *createTagger(const char *arg, macab_io_file_t *io = nullptr);
+MECAB_DLL_EXTERN Tagger      *createTagger(const char *arg, macab_io_file_t *io = mecab_default_io());
 
 /**
  * delete Lattice object.

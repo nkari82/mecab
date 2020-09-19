@@ -50,13 +50,13 @@ bool EncoderLearnerTagger::open(Tokenizer<LearnerNode, LearnerPath> *tokenizer,
 bool DecoderLearnerTagger::open(const Param &param) {
   close();
   allocator_data_.reset(new Allocator<LearnerNode, LearnerPath>());
-  tokenizer_data_.reset(new Tokenizer<LearnerNode, LearnerPath>());
-  feature_index_data_.reset(new DecoderFeatureIndex);
+  tokenizer_data_.reset(new Tokenizer<LearnerNode, LearnerPath>(mecab_default_io()));
+  feature_index_data_.reset(new DecoderFeatureIndex(mecab_default_io()));
   allocator_ = allocator_data_.get();
   tokenizer_ = tokenizer_data_.get();
   feature_index_ = feature_index_data_.get();
 
-  CHECK_DIE(tokenizer_->open(param, nullptr)) << tokenizer_->what();
+  CHECK_DIE(tokenizer_->open(param)) << tokenizer_->what();
   CHECK_DIE(feature_index_->open(param));
 
   return true;

@@ -101,6 +101,7 @@ class Allocator {
 template <typename N, typename P>
 class Tokenizer {
  private:
+  macab_io_file_t *io_;
   std::vector<Dictionary *>              dic_;
   Dictionary                             unkdic_;
   std::string                          bos_feature_;
@@ -119,14 +120,14 @@ class Tokenizer {
   template <bool IsPartial> N *lookup(const char *begin, const char *end,
                                       Allocator<N, P> *allocator,
                                       Lattice *lattice) const;
-  bool open(const Param &param, macab_io_file_t *io);
+  bool open(const Param &param);
   void close();
 
   const DictionaryInfo *dictionary_info() const;
 
   const char *what() { return what_.str(); }
 
-  explicit Tokenizer();
+  explicit Tokenizer(macab_io_file_t *io);
   virtual ~Tokenizer() { this->close(); }
 };
 }

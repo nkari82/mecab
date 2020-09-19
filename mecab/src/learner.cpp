@@ -75,10 +75,10 @@ class CRFLearner {
     std::vector<double> alpha;
     std::vector<double> old_alpha;
     std::vector<EncoderLearnerTagger *> x;
-    Tokenizer<LearnerNode, LearnerPath> tokenizer;
+    Tokenizer<LearnerNode, LearnerPath> tokenizer(mecab_default_io());
     Allocator<LearnerNode, LearnerPath> allocator;
 
-    CHECK_DIE(tokenizer.open(*param, nullptr)) << "cannot open tokenizer";
+    CHECK_DIE(tokenizer.open(*param)) << "cannot open tokenizer";
     CHECK_DIE(feature_index.open(*param)) << "cannot open feature index";
 
     if (!old_model.empty()) {
@@ -302,7 +302,7 @@ class Learner {
       { 0, 0, 0, 0 }
     };
 
-    Param param;
+    Param param(mecab_default_io());
 
     if (!param.open(argc, argv, long_options)) {
       std::cout << param.what() << "\n\n" <<  COPYRIGHT

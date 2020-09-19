@@ -26,7 +26,7 @@ class Dictionary {
  public:
   typedef Darts::DoubleArray::result_pair_type result_type;
 
-  bool open(const char *filename, const char *mode = "r", macab_io_file_t *io = nullptr);
+  bool open(const char *filename, const char *mode = "r");
   void close();
 
   size_t commonPrefixSearch(const char* key, size_t len,
@@ -73,16 +73,11 @@ class Dictionary {
 
   const char *what() { return what_.str(); }
 
-  explicit Dictionary() 
-	  : io_{0}
-	  , handle_(0)
-	  , token_(0)
-	  , feature_(0)
-	  , charset_{0} {}
-  virtual ~Dictionary() { this->close(); }
+  explicit Dictionary(macab_io_file_t *io);
+  virtual ~Dictionary();
 
  private:
-  macab_io_file_t     io_;
+  macab_io_file_t     *io_;
   file_handle_t        handle_;
   IMMap::Ptr			token_;
   IMMap::Ptr			feature_;

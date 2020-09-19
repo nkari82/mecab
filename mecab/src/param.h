@@ -43,6 +43,7 @@ struct Option {
 
 class Param {
  private:
+  macab_io_file_t *io_;
   std::map<std::string, std::string> conf_;
   std::vector<std::string>           rest_;
   std::string                        system_name_;
@@ -53,7 +54,7 @@ class Param {
  public:
   bool open(int argc,  char **argv, const Option *opt);
   bool open(const char *arg,  const Option *opt);
-  bool load(const char *filename, struct macab_io_file_t *io = nullptr);
+  bool load(const char *filename);
   void clear();
   const std::vector<std::string>& rest_args() const { return rest_; }
 
@@ -83,7 +84,7 @@ class Param {
 
   void dump_config(std::ostream *os) const;
 
-  explicit Param() {}
+  explicit Param(macab_io_file_t *io) : io_(io) {}
   virtual ~Param() {}
 };
 }

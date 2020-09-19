@@ -42,7 +42,7 @@ void inline read_node_info(const Dictionary &dic,
 
 template class Tokenizer<Node, Path>;
 template class Tokenizer<LearnerNode, LearnerPath>;
-template Tokenizer<Node, Path>::Tokenizer();
+template Tokenizer<Node, Path>::Tokenizer(macab_io_file_t *io);
 template void Tokenizer<Node, Path>::close();
 template const DictionaryInfo
 *Tokenizer<Node, Path>::dictionary_info() const;
@@ -58,8 +58,8 @@ template Node* Tokenizer<Node, Path>::lookup<true>(
     const char *,
     Allocator<Node, Path> *,
     Lattice *) const;
-template bool Tokenizer<Node, Path>::open(const Param &, macab_io_file_t*);
-template Tokenizer<LearnerNode, LearnerPath>::Tokenizer();
+template bool Tokenizer<Node, Path>::open(const Param &);
+template Tokenizer<LearnerNode, LearnerPath>::Tokenizer(macab_io_file_t *io);
 template void Tokenizer<LearnerNode, LearnerPath>::close();
 template const DictionaryInfo
 *Tokenizer<LearnerNode, LearnerPath>::dictionary_info() const;
@@ -71,13 +71,16 @@ template LearnerNode *Tokenizer<LearnerNode, LearnerPath>::lookup<false>(
     const char *,
     const char *,
     Allocator<LearnerNode, LearnerPath> *, Lattice *) const;
-template bool Tokenizer<LearnerNode, LearnerPath>::open(const Param &, macab_io_file_t*);
+template bool Tokenizer<LearnerNode, LearnerPath>::open(const Param &);
 
 template <typename N, typename P>
-Tokenizer<N, P>::Tokenizer()
-    : dictionary_info_freelist_(4),
-      dictionary_info_(0),
-      max_grouping_size_(0) {}
+Tokenizer<N, P>::Tokenizer(macab_io_file_t *io)
+    : io_(io)
+	, unkdic_(io)
+	, dictionary_info_freelist_(4)
+    , dictionary_info_(0)
+	, property_(io)
+    , max_grouping_size_(0) {}
 
 template <typename N, typename P>
 N *Tokenizer<N, P>::getBOSNode(Allocator<N, P> *allocator) const {
@@ -97,16 +100,16 @@ N *Tokenizer<N, P>::getEOSNode(Allocator<N, P> *allocator) const {
 }
 
 template <typename N, typename P>
-bool Tokenizer<N, P>::open(const Param &param, macab_io_file_t *io) {
+bool Tokenizer<N, P>::open(const Param &param) {
   close();
 
   const std::string prefix = param.template get<std::string>("dicdir");
 
-  CHECK_FALSE(unkdic_.open(create_filename(prefix, UNK_DIC_FILE).c_str(), "r", io)) << unkdic_.what();
-  CHECK_FALSE(property_.open(param, io)) << property_.what();
+  CHECK_FALSE(unkdic_.open(create_filename(prefix, UNK_DIC_FILE).c_str(), "r")) << unkdic_.what();
+  CHECK_FALSE(property_.open(param)) << property_.what();
 
-  Dictionary *sysdic = new Dictionary;
-  CHECK_FALSE(sysdic->open(create_filename(prefix, SYS_DIC_FILE).c_str(), "r", io)) << sysdic->what();
+  Dictionary *sysdic = new Dictionary(io_);
+  CHECK_FALSE(sysdic->open(create_filename(prefix, SYS_DIC_FILE).c_str(), "r")) << sysdic->what();
   CHECK_FALSE(sysdic->type() == 0) << "not a system dictionary: " << prefix;
 
   property_.set_charset(sysdic->charset());
@@ -119,7 +122,7 @@ bool Tokenizer<N, P>::open(const Param &param, macab_io_file_t *io) {
     std::strncpy(buf.data(), userdic.c_str(), buf.size());
     const size_t n = tokenizeCSV(buf.data(), dicfile.data(), dicfile.size());
     for (size_t i = 0; i < n; ++i) {
-      Dictionary *d = new Dictionary;
+      Dictionary *d = new Dictionary(io_);
       CHECK_FALSE(d->open(dicfile[i])) << d->what();
       CHECK_FALSE(d->type() == 1)
           << "not a user dictionary: " << dicfile[i];

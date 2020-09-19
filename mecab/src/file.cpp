@@ -169,23 +169,19 @@ namespace MeCab {
 #endif
 	}
 
-	macab_io_file_t* default_io() {
-		static macab_io_file_t io{ open, close, read, seek };
-		return &io;
-	}
-
 	const char* default_io_what() {
 		return what_.str();
 	}
 
-	iobuf::iobuf(const char* file, macab_io_file_t *io) : io_(io ? io : default_io()), handle_(0)
+	iobuf::iobuf(const char* file, macab_io_file_t *io) : io_(io), handle_(0)
 	{
-		handle_ = io->open(file, "r", nullptr, nullptr);
+		handle_ = io_->open(file, "r", nullptr, nullptr);
 	}
 
 	iobuf::~iobuf()
 	{
-		io_->close(handle_);
+		if(io_ != nullptr && io_->close != nullptr)
+			io_->close(handle_);
 	}
 
 	int iobuf::underflow()
@@ -345,4 +341,9 @@ namespace MeCab {
 	{
 		relative_ += int(offset * stride);
 	}
+}
+
+macab_io_file_t* mecab_default_io() {
+	static macab_io_file_t io{ MeCab::open, MeCab::close, MeCab::read, MeCab::seek };
+	return &io;
 }

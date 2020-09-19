@@ -11,7 +11,7 @@ class Param;
 
 class Connector {
  private:
-  macab_io_file_t io_;
+  macab_io_file_t *io_;
   file_handle_t    handle_;
   short          *matrix_;
   unsigned short  lsize_;
@@ -20,7 +20,7 @@ class Connector {
 
  public:
 
-  bool open(const Param &param, macab_io_file_t *io);
+  bool open(const Param &param);
   void close();
   void clear() {}
 
@@ -46,7 +46,7 @@ class Connector {
   const short *matrix() const;
 
   bool openText(const char *filename);
-  bool open(const char *filename, const char *mode = "r", macab_io_file_t *io = nullptr);
+  bool open(const char *filename, const char *mode = "r");
 
   bool is_valid(size_t lid, size_t rid) const {
     return (lid >= 0 && lid < rsize_ && rid >= 0 && rid < lsize_);
@@ -54,8 +54,8 @@ class Connector {
 
   static bool compile(const char *, const char *);
 
-  explicit Connector(): 
-	  io_{0}, handle_(0), matrix_(0), lsize_(0), rsize_(0) {}
+  explicit Connector(macab_io_file_t *io):
+	  io_(io), handle_(0), matrix_(0), lsize_(0), rsize_(0) {}
 
   virtual ~Connector() { this->close(); }
 };

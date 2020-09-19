@@ -67,9 +67,8 @@ void Param::dump_config(std::ostream *os) const {
   }
 }
 
-bool Param::load(const char *filename, macab_io_file_t *io) {
-  if (!io) io = default_io();
-  iobuf buf(WPATH(filename), io);
+bool Param::load(const char *filename) {
+  iobuf buf(WPATH(filename), io_);
   std::istream ifs((std::streambuf*)&buf);
 
   CHECK_FALSE(ifs) << "no such file or directory: " << filename;

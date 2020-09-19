@@ -74,22 +74,28 @@ CharInfo encode(const std::vector<std::string> &c,
 }
 }
 
-bool CharProperty::open(const Param &param, macab_io_file_t *io) {
+CharProperty::CharProperty(macab_io_file_t *io /*= mecab_default_io()*/)
+	: io_(io)
+	, handle_(0)
+	, map_(0)
+	, charset_(0)
+{}
+
+bool CharProperty::open(const Param &param) {
   const std::string prefix   = param.get<std::string>("dicdir");
   const std::string filename = create_filename(prefix, CHAR_PROPERTY_FILE);
-  return open(filename.c_str(), io);
+  return open(filename.c_str());
 }
 
-bool CharProperty::open(const char *filename, macab_io_file_t *io) {
+bool CharProperty::open(const char *filename) {
   close();
-  io_ = io ? *io : *default_io();
   std::ostringstream error;
   const char *mapped(nullptr);
   size_t length(0);
-  CHECK_FALSE(handle_ = io_.open(filename, "r", &length, (void**)&mapped));
+  CHECK_FALSE(handle_ = io_->open(filename, "r", &length, (void**)&mapped));
 
   std::shared_ptr<IMMap> ptr;
-  ptr.reset(mapped ? new MMap((char*)mapped, length) : (IMMap*)(new FileMap(&io_, handle_, length)));
+  ptr.reset(mapped ? new MMap((char*)mapped, length) : (IMMap*)(new FileMap(io_, handle_, length)));
 
   unsigned int csize;
   ptr->read(&csize, sizeof(unsigned int));
@@ -110,8 +116,8 @@ bool CharProperty::open(const char *filename, macab_io_file_t *io) {
 }
 
 void CharProperty::close() {
-  if (io_.close != nullptr)
-	 io_.close(handle_);
+  if (io_ != nullptr && io_->close)
+	 io_->close(handle_);
 }
 
 size_t CharProperty::size() const { return clist_.size(); }

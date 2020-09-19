@@ -80,12 +80,12 @@ const MeCab::Option long_options[] = {
 
 class ModelImpl: public Model {
  public:
-  ModelImpl();
+  ModelImpl(macab_io_file_t *io);
   virtual ~ModelImpl();
 
   bool open(int argc, char **argv);
-  bool open(const char *arg, macab_io_file_t *io);
-  bool open(const Param &param, macab_io_file_t *io);
+  bool open(const char *arg);
+  bool open(const Param &param);
 
   bool swap(Model *model);
 
@@ -144,6 +144,7 @@ class ModelImpl: public Model {
 #endif
 
  private:
+  macab_io_file_t *io_;
   Viterbi            *viterbi_;
   std::shared_ptr<Writer>  writer_;
   int                 request_type_;
@@ -157,7 +158,7 @@ class ModelImpl: public Model {
 class TaggerImpl: public Tagger {
  public:
   bool                  open(int argc, char **argv);
-  bool                  open(const char *arg, macab_io_file_t *io);
+  bool                  open(const char *arg);
   bool                  open(const ModelImpl &model);
 
   bool                  parse(Lattice *lattice) const;
@@ -196,7 +197,7 @@ class TaggerImpl: public Tagger {
 
   const char*           what() const;
 
-  TaggerImpl();
+  TaggerImpl(macab_io_file_t *io);
   virtual ~TaggerImpl();
 
  private:
@@ -218,13 +219,13 @@ class TaggerImpl: public Tagger {
     return lattice_.get();
   }
 
+  macab_io_file_t *io_;
   const ModelImpl          *current_model_;
   std::shared_ptr<ModelImpl>     model_;
   std::shared_ptr<Lattice>       lattice_;
   int                       request_type_;
   double                    theta_;
   std::string               what_;
-  macab_io_file_t io_;
 };
 
 class LatticeImpl : public Lattice {
@@ -339,9 +340,11 @@ class LatticeImpl : public Lattice {
   const char *enumNBestAsStringInternal(size_t N, StringBuffer *os);
 };
 
-ModelImpl::ModelImpl()
-    : viterbi_(new Viterbi), writer_(new Writer),
-      request_type_(MECAB_ONE_BEST), theta_(0.0) {}
+ModelImpl::ModelImpl(macab_io_file_t *io)
+    : io_(io)
+	, viterbi_(new Viterbi(io))
+	, writer_(new Writer)
+	, request_type_(MECAB_ONE_BEST), theta_(0.0) {}
 
 ModelImpl::~ModelImpl() {
   delete viterbi_;
@@ -349,28 +352,27 @@ ModelImpl::~ModelImpl() {
 }
 
 bool ModelImpl::open(int argc, char **argv) {
-  Param param;
+  Param param(io_);
   if (!param.open(argc, argv, long_options) ||
       !load_dictionary_resource(&param)) {
     setGlobalError(param.what());
     return false;
   }
-  return open(param, nullptr);
+  return open(param);
 }
 
-bool ModelImpl::open(const char *arg, macab_io_file_t *io) {
-  Param param;
+bool ModelImpl::open(const char *arg) {
+  Param param(io_);
   if (!param.open(arg, long_options) ||
       !load_dictionary_resource(&param)) {
     setGlobalError(param.what());
     return false;
   }
-  return open(param, io);
+  return open(param);
 }
 
-bool ModelImpl::open(const Param &param, macab_io_file_t *io) {
-  if (!io) io = default_io();
-  if (!writer_->open(param) || !viterbi_->open(param, io)) {
+bool ModelImpl::open(const Param &param) {
+  if (!writer_->open(param) || !viterbi_->open(param)) {
     std::string error = viterbi_->what();
     if (!error.empty()) {
       error.append(" ");
@@ -427,7 +429,7 @@ Tagger *ModelImpl::createTagger() const {
     setGlobalError("Model is not available");
     return 0;
   }
-  TaggerImpl *tagger = new TaggerImpl;
+  TaggerImpl *tagger = new TaggerImpl(io_);
   if (!tagger->open(*this)) {
     setGlobalError(tagger->what());
     delete tagger;
@@ -446,9 +448,11 @@ Lattice *ModelImpl::createLattice() const {
   return new LatticeImpl(writer_.get());
 }
 
-TaggerImpl::TaggerImpl()
-    : current_model_(0),
-      request_type_(MECAB_ONE_BEST), theta_(kDefaultTheta) {}
+TaggerImpl::TaggerImpl(macab_io_file_t *io)
+    : io_(io)
+	, current_model_(0)
+    , request_type_(MECAB_ONE_BEST)
+	, theta_(kDefaultTheta) {}
 
 TaggerImpl::~TaggerImpl() {}
 
@@ -457,7 +461,7 @@ const char *TaggerImpl::what() const {
 }
 
 bool TaggerImpl::open(int argc, char **argv) {
-  model_.reset(new ModelImpl);
+  model_.reset(new ModelImpl(io_));
   if (!model_->open(argc, argv)) {
     model_.reset();
     return false;
@@ -468,10 +472,9 @@ bool TaggerImpl::open(int argc, char **argv) {
   return true;
 }
 
-bool TaggerImpl::open(const char *arg, macab_io_file_t *io) {
-  io_ = io ? *io : *default_io();
-  model_.reset(new ModelImpl);
-  if (!model_->open(arg, &io_)) {
+bool TaggerImpl::open(const char *arg) {
+  model_.reset(new ModelImpl(io_));
+  if (!model_->open(arg)) {
     model_.reset();
     return false;
   }
@@ -1051,8 +1054,8 @@ const char *Tagger::version() {
   return VERSION;
 }
 
-Tagger *createTagger(int argc, char **argv) {
-  TaggerImpl *tagger = new TaggerImpl();
+Tagger *createTagger(int argc, char **argv, macab_io_file_t *io) {
+  TaggerImpl *tagger = new TaggerImpl(io);
   if (!tagger->open(argc, argv)) {
     setGlobalError(tagger->what());
     delete tagger;
@@ -1062,8 +1065,8 @@ Tagger *createTagger(int argc, char **argv) {
 }
 
 Tagger *createTagger(const char *argv, macab_io_file_t *io) {
-  TaggerImpl *tagger = new TaggerImpl();
-  if (!tagger->open(argv, io)) {
+  TaggerImpl *tagger = new TaggerImpl(io);
+  if (!tagger->open(argv)) {
     setGlobalError(tagger->what());
     delete tagger;
     return 0;
@@ -1083,8 +1086,8 @@ const char *getLastError() {
   return getGlobalError();
 }
 
-Model *createModel(int argc, char **argv) {
-  ModelImpl *model = new ModelImpl;
+Model *createModel(int argc, char **argv, macab_io_file_t *io) {
+  ModelImpl *model = new ModelImpl(io);
   if (!model->open(argc, argv)) {
     delete model;
     return 0;
@@ -1093,8 +1096,8 @@ Model *createModel(int argc, char **argv) {
 }
 
 Model *createModel(const char *arg, macab_io_file_t *io) {
-  ModelImpl *model = new ModelImpl;
-  if (!model->open(arg, io)) {
+  ModelImpl *model = new ModelImpl(io);
+  if (!model->open(arg)) {
     delete model;
     return 0;
   }
@@ -1135,13 +1138,13 @@ void deleteLattice(Lattice *lattice) {
 }
 }  // MeCab
 
-int mecab_do(int argc, char **argv, macab_io_file_t *io) {
+int mecab_do(int argc, char **argv) {
 #define WHAT_ERROR(msg) do {                    \
     std::cout << msg << std::endl;              \
     return EXIT_FAILURE; }                      \
   while (0);
 
-  MeCab::Param param;
+  MeCab::Param param(mecab_default_io());
   if (!param.open(argc, argv, MeCab::long_options)) {
     std::cout << param.what() << std::endl;
     return EXIT_FAILURE;
@@ -1157,7 +1160,7 @@ int mecab_do(int argc, char **argv, macab_io_file_t *io) {
     return EXIT_SUCCESS;
   }
 
-  if (!load_dictionary_resource(&param, io)) {
+  if (!load_dictionary_resource(&param)) {
     std::cout << param.what() << std::endl;
     return EXIT_SUCCESS;
   }
@@ -1167,8 +1170,8 @@ int mecab_do(int argc, char **argv, macab_io_file_t *io) {
               << "use --marginal or --nbest." << std::endl;
   }
 
-  std::shared_ptr<MeCab::ModelImpl> model(new MeCab::ModelImpl);
-  if (!model->open(param, io)) {
+  std::shared_ptr<MeCab::ModelImpl> model(new MeCab::ModelImpl(mecab_default_io()));
+  if (!model->open(param)) {
     std::cout << MeCab::getLastError() << std::endl;
     return EXIT_FAILURE;
   }

@@ -43,19 +43,21 @@ void calc_beta(Node *n, double beta) {
 }
 }  // namespace
 
-Viterbi::Viterbi()
-    :  tokenizer_(0), connector_(0),
-       cost_factor_(0) {}
+Viterbi::Viterbi(macab_io_file_t *io)
+    : io_(io)
+	, tokenizer_(0)
+	, connector_(0)
+	, cost_factor_(0) {}
 
 Viterbi::~Viterbi() {}
 
-bool Viterbi::open(const Param &param, macab_io_file_t *io) {
-  tokenizer_.reset(new Tokenizer<Node, Path>);
-  CHECK_FALSE(tokenizer_->open(param, io)) << tokenizer_->what();
+bool Viterbi::open(const Param &param) {
+  tokenizer_.reset(new Tokenizer<Node, Path>(io_));
+  CHECK_FALSE(tokenizer_->open(param)) << tokenizer_->what();
   CHECK_FALSE(tokenizer_->dictionary_info()) << "Dictionary is empty";
 
-  connector_.reset(new Connector);
-  CHECK_FALSE(connector_->open(param, io)) << connector_->what();
+  connector_.reset(new Connector(io_));
+  CHECK_FALSE(connector_->open(param)) << connector_->what();
 
   CHECK_FALSE(tokenizer_->dictionary_info()->lsize ==
               connector_->left_size() &&

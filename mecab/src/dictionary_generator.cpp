@@ -28,7 +28,7 @@ namespace MeCab {
 
 void copy(const char *src, const char *dst) {
   std::cout << "copying " << src << " to " <<  dst << std::endl;
-  macab_io_file_t* io = default_io();
+  macab_io_file_t* io = mecab_default_io();
   file_handle_t handle(0);
   size_t length(0);
   const char *ptr(nullptr);
@@ -195,7 +195,7 @@ class DictionaryGenerator {
       { 0, 0, 0, 0 }
     };
 
-    Param param;
+    Param param(mecab_default_io());
 
     if (!param.open(argc, argv, long_options)) {
       std::cout << param.what() << "\n\n" <<  COPYRIGHT
@@ -206,7 +206,7 @@ class DictionaryGenerator {
     if (!param.help_version()) return 0;
 
     ContextID cid;
-    DecoderFeatureIndex fi;
+    DecoderFeatureIndex fi(mecab_default_io());
     DictionaryRewriter rewrite;
 
     const std::string dicdir = param.get<std::string>("dicdir");
@@ -221,14 +221,14 @@ class DictionaryGenerator {
 
     std::string charset;
     {
-      Dictionary dic;
+      Dictionary dic(mecab_default_io());
       CHECK_DIE(dic.open(DCONF(SYS_DIC_FILE), "r"));
       charset = dic.charset();
       CHECK_DIE(!charset.empty());
     }
 
-    CharProperty property;
-    CHECK_DIE(property.open(param, nullptr));
+    CharProperty property(mecab_default_io());
+    CHECK_DIE(property.open(param));
     property.set_charset(charset.c_str());
 
     const std::string bos = param.get<std::string>("bos-feature");

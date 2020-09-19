@@ -19,7 +19,7 @@ template <typename N, typename P> class Tokenizer;
 
 class Viterbi {
  public:
-  bool open(const Param &param, macab_io_file_t *io);
+  bool open(const Param &param);
 
   bool analyze(Lattice *lattice) const;
 
@@ -31,7 +31,7 @@ class Viterbi {
 
   static bool buildResultForNBest(Lattice *lattice);
 
-  Viterbi();
+  Viterbi(macab_io_file_t *io);
   virtual ~Viterbi();
 
  private:
@@ -44,6 +44,7 @@ class Viterbi {
   static bool buildAllLattice(Lattice *lattice);
   static bool buildAlternative(Lattice *lattice);
 
+  macab_io_file_t *io_;
   std::shared_ptr<Tokenizer<Node, Path> > tokenizer_;
   std::shared_ptr<Connector> connector_;
   int                   cost_factor_;

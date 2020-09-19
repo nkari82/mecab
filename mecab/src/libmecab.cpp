@@ -109,8 +109,8 @@ mecab_t* mecab_new(int argc, char **argv) {
   return reinterpret_cast<mecab_t *>(tagger);
 }
 
-mecab_t* mecab_new2(const char *arg, macab_io_file_t *io) {
-  MeCab::Tagger *tagger = MeCab::createTagger(arg, io);
+mecab_t* mecab_new2(const char *arg) {
+  MeCab::Tagger *tagger = MeCab::createTagger(arg);
   if (!tagger) {
     MeCab::deleteTagger(tagger);
     return 0;

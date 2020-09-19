@@ -79,17 +79,16 @@ struct pair_1st_cmp: public std::binary_function<bool, T1, T2> {
 };
 }  // namespace
 
-bool Dictionary::open(const char *file, const char *mode, macab_io_file_t *io) {
+bool Dictionary::open(const char *file, const char *mode) {
   close();
-  io_ = io ? *io : *default_io();
   filename_.assign(file);
   const char *mapped(nullptr);
   size_t length(0);
-  CHECK_FALSE(handle_ = io_.open(file, mode, &length, (void**)&mapped)) << "no such file or directory: " << file;
+  CHECK_FALSE(handle_ = io_->open(file, mode, &length, (void**)&mapped)) << "no such file or directory: " << file;
   CHECK_FALSE(length >= 100) << "dictionary file is broken: " << file;
 
   std::shared_ptr<IMMap> ptr;
-  ptr.reset(mapped ? new MMap((char*)mapped, length) : (IMMap*)(new FileMap(&io_, handle_, length)));
+  ptr.reset(mapped ? new MMap((char*)mapped, length) : (IMMap*)(new FileMap(io_, handle_, length)));
   
   unsigned int dsize;
   unsigned int tsize;
@@ -125,8 +124,8 @@ bool Dictionary::open(const char *file, const char *mode, macab_io_file_t *io) {
 }
 
 void Dictionary::close() {
-  if (io_.close != nullptr)
-	 io_.close(handle_);
+  if (io_ != nullptr && io_->close != nullptr)
+	 io_->close(handle_);
 }
 
 #define DCONF(file) create_filename(dicdir, std::string(file));
@@ -135,11 +134,11 @@ bool Dictionary::assignUserDictionaryCosts(
     const Param &param,
     const std::vector<std::string> &dics,
     const char *output) {
-  Connector matrix;
+  Connector matrix(mecab_default_io());
   DictionaryRewriter rewriter;
-  DecoderFeatureIndex fi;
+  DecoderFeatureIndex fi(mecab_default_io());
   ContextID cid;
-  CharProperty property;
+  CharProperty property(mecab_default_io());
 
   const std::string dicdir = param.get<std::string>("dicdir");
 
@@ -168,7 +167,7 @@ bool Dictionary::assignUserDictionaryCosts(
   rewriter.open(rewrite_file.c_str(), &config_iconv);
   CHECK_DIE(fi.open(param)) << "cannot open feature index";
 
-  CHECK_DIE(property.open(param, nullptr));
+  CHECK_DIE(property.open(param));
   property.set_charset(from.c_str());
 
   if (!matrix.openText(matrix_file.c_str()) &&
@@ -220,6 +219,19 @@ bool Dictionary::assignUserDictionaryCosts(
   return true;
 }
 
+Dictionary::Dictionary(macab_io_file_t *io)
+	: io_(io)
+	, handle_(0)
+	, token_(0)
+	, feature_(0)
+	, charset_{ 0 }
+{}
+
+Dictionary::~Dictionary()
+{
+	this->close();
+}
+
 const Token *Dictionary::token(const result_type &n) const
 {
 	int offset = sizeof(Token) * (n.value >> 8);
@@ -238,7 +250,7 @@ const char *Dictionary::feature(const Token &t) const
 bool Dictionary::compile(const Param &param,
                          const std::vector<std::string> &dics,
                          const char *output) {
-  Connector matrix;
+  Connector matrix(mecab_default_io());
   std::shared_ptr<DictionaryRewriter> rewrite;
   std::shared_ptr<POSIDGenerator> posid;
   std::shared_ptr<DecoderFeatureIndex> fi;
@@ -343,10 +355,10 @@ bool Dictionary::compile(const Param &param,
         if (!rewrite.get()) {
           rewrite.reset(new DictionaryRewriter);
           rewrite->open(rewrite_file.c_str(), &config_iconv);
-          fi.reset(new DecoderFeatureIndex);
+          fi.reset(new DecoderFeatureIndex(mecab_default_io()));
           CHECK_DIE(fi->open(param)) << "cannot open feature index";
-          property.reset(new CharProperty);
-          CHECK_DIE(property->open(param, nullptr));
+          property.reset(new CharProperty(mecab_default_io()));
+          CHECK_DIE(property->open(param));
           property->set_charset(from.c_str());
         }
         cost = calcCost(w, feature, factor,

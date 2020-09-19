@@ -59,7 +59,7 @@ class DictionaryComplier {
       { 0, 0, 0, 0 }
     };
 
-    Param param;
+    Param param(mecab_default_io());
 
     if (!param.open(argc, argv, long_options)) {
       std::cout << param.what() << "\n\n" <<  COPYRIGHT

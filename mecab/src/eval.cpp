@@ -95,7 +95,7 @@ class Eval {
       { 0, 0, 0, 0 }
     };
 
-    MeCab::Param param;
+    MeCab::Param param(mecab_default_io());
     param.open(argc, argv, long_options);
 
     if (!param.open(argc, argv, long_options)) {
@@ -211,7 +211,7 @@ class TestSentenceGenerator {
       { 0, 0, 0, 0 }
     };
 
-    MeCab::Param param;
+    MeCab::Param param(mecab_default_io());
     param.open(argc, argv, long_options);
 
     if (!param.open(argc, argv, long_options)) {

@@ -16,21 +16,20 @@
 
 namespace MeCab {
 
-bool Connector::open(const Param &param, macab_io_file_t *io) {
+bool Connector::open(const Param &param) {
   const std::string filename = create_filename
       (param.get<std::string>("dicdir"), MATRIX_FILE);
-  return open(filename.c_str(), "r", io);
+  return open(filename.c_str(), "r");
 }
 
-bool Connector::open(const char* filename, const char *mode, macab_io_file_t *io) {
+bool Connector::open(const char* filename, const char *mode) {
   close();
-  io_ = io ? *io : *default_io();
   const char *mapped(nullptr);
   size_t length(0);
-  CHECK_FALSE(handle_ = io_.open(filename, mode, &length, (void**)&mapped)) << "cannot open: " << filename;
+  CHECK_FALSE(handle_ = io_->open(filename, mode, &length, (void**)&mapped)) << "cannot open: " << filename;
 
   std::shared_ptr<IMMap> ptr;
-  ptr.reset(mapped ? new MMap((char*)mapped, length) : (IMMap*)(new FileMap(&io_, handle_, length)));
+  ptr.reset(mapped ? new MMap((char*)mapped, length) : (IMMap*)(new FileMap(io_, handle_, length)));
 
   ptr->read(&lsize_, sizeof(unsigned short));
   ptr->read(&rsize_, sizeof(unsigned short));
@@ -46,8 +45,8 @@ bool Connector::open(const char* filename, const char *mode, macab_io_file_t *io
 }
 
 void Connector::close() {
-  if (io_.close != nullptr)
-	 io_.close(handle_);
+  if (io_ != nullptr && io_->close != nullptr)
+	 io_->close(handle_);
 }
 
 short * Connector::mutable_matrix()
