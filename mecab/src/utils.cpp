@@ -7,7 +7,6 @@
 #include <fstream>
 #include <iostream>
 #include <array>
-#include <unordered_map>
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"

@@ -1,7 +1,6 @@
 #ifndef MECAB_FILE_H_
 #define MECAB_FILE_H_
 
-#include <unordered_map>
 #include <iosfwd>
 #include <streambuf>
 #include <memory>
@@ -71,7 +70,7 @@ namespace MeCab {
 	class FileMap : public IMMap
 	{
 	private:
-		std::unordered_map<size_t, char*> mmap_;
+		robin_hood::unordered_map<size_t, char*> mmap_;
 		macab_io_file_t* io_;
 		file_handle_t handle_;
 		int relative_;

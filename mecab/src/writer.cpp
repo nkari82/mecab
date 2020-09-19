@@ -8,7 +8,6 @@
 #include <fstream>
 #include <iostream>
 #include <array>
-#include <unordered_map>
 #include "mecab.h"
 #include "common.h"
 #include "param.h"

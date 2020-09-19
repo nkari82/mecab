@@ -6,9 +6,9 @@
 #include <cstdio>
 #include <fstream>
 #include <array>
-#include <unordered_map>
 #include "mecab.h"
 #include "common.h"
+#include "robin_hood.h"
 #include "file.h"
 #include "param.h"
 #include "string_buffer.h"

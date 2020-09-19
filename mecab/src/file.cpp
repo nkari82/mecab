@@ -1,7 +1,7 @@
-#include <unordered_map>
 #include <cassert>
 #include "mecab.h"
 #include "common.h"
+#include "robin_hood.h"
 #include "file.h"
 #include "utils.h"
 
@@ -40,7 +40,7 @@ namespace MeCab {
 
 	static file_t* s_current(nullptr);
 
-	static std::unordered_map<file_handle_t, file_t> s_files;
+	static robin_hood::unordered_map<file_handle_t, file_t> s_files;
 	static whatlog what_;
 
 	static file_handle_t open(const char *path, const char *mode, size_t* length, void **mapped)
@@ -96,7 +96,7 @@ namespace MeCab {
 		if (length != nullptr)
 			*length = file.length;
 
-		s_files.insert(s_files.end(), std::make_pair(handle, file));
+		s_files.emplace(std::make_pair(handle, file));
 		s_current = &file;
 		return handle;
 	}

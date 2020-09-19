@@ -7,9 +7,9 @@
 #include <iterator>
 #include <cmath>
 #include <cstring>
-#include <unordered_map>
 #include "mecab.h"
 #include "common.h"
+#include "robin_hood.h"
 #include "file.h"
 #include "freelist.h"
 #include "learner_node.h"

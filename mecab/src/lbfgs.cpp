@@ -24,7 +24,6 @@
 #include <cmath>
 #include <iostream>
 #include <numeric>
-#include <unordered_map>
 #include "mecab.h"
 #include "lbfgs.h"
 #include "common.h"

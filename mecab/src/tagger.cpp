@@ -7,9 +7,9 @@
 #include <iostream>
 #include <iterator>
 #include <array>
-#include <unordered_map>
 #include "mecab.h"
 #include "common.h"
+#include "robin_hood.h"
 #include "file.h"
 #include "connector.h"
 #include "nbest_generator.h"

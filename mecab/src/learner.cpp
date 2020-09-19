@@ -6,9 +6,9 @@
 #include <fstream>
 #include <string>
 #include <vector>
-#include <unordered_map>
 #include "mecab.h"
 #include "common.h"
+#include "robin_hood.h"
 #include "file.h"
 #include "thread.h"
 #include "utils.h"

@@ -9,9 +9,9 @@
 #include <iterator>
 #include <vector>
 #include <array>
-#include <unordered_map>
 #include "mecab.h"
 #include "common.h"
+#include "robin_hood.h"
 #include "file.h"
 #include "utils.h"
 #include "string_buffer.h"
