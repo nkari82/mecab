@@ -4,6 +4,9 @@ project(mecab)
 cmake_host_system_information(RESULT _os QUERY OS_NAME)
 cmake_host_system_information(RESULT _platform QUERY OS_PLATFORM)
 	
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 configure_file(src/config.h.cmake ${CMAKE_CURRENT_SOURCE_DIR}/src/config.h)
 include (CheckIncludeFiles)
 include (CheckSymbolExists)
