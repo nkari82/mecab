@@ -33,17 +33,6 @@ check_include_files ( sys/types.h HAVE_SYS_TYPES_H )
 check_include_files ( sys/unistd.h HAVE_UNISTD_H )
 check_include_files ( windows.h HAVE_WINDOWS_H )
 
-find_path(Iconv_INCLUDE_DIR NAMES "iconv.h" DOC "iconv include directory")
-
-set(Iconv_LIBRARY_NAMES "iconv" "libiconv")
-find_path(Iconv_LIBRARY_DIR NAMES ${Iconv_LIBRARY_NAMES} DOC "iconv library directory")
-
-mark_as_advanced(Iconv_INCLUDE_DIR)
-mark_as_advanced(Iconv_LIBRARY_DIR)
-
-include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(Iconv REQUIRED_VARS Iconv_LIBRARY_DIR Iconv_INCLUDE_DIR)
-
 check_function_exists ( getenv HAVE_GETENV )
 check_function_exists ( mmap HAVE_MMAP )
 
@@ -122,25 +111,7 @@ else()
 	add_library(libmecab STATIC ${SOURCES})
 endif()
 
-if(Iconv_FOUND)
-	check_include_files ( ${Iconv_INCLUDE_DIR}/iconv.h HAVE_ICONV )
-	link_directories( ${Iconv_LIBRARY_DIR} )
-	
-	set(Iconv_LIBRARIES libiconv)
-	if(EXISTS ${Iconv_LIBRARY_DIR}/libcharset.lib OR EXISTS ${Iconv_LIBRARY_DIR}/libcharset.a)
-		add_definitions( -DICONV_STATIC )
-		set(Iconv_LIBRARIES ${Iconv_LIBRARIES} libcharset)
-	endif()
-	
-	target_include_directories(libmecab PRIVATE ./src ./ ${Iconv_INCLUDE_DIR})
-	if (BUILD_SHARED_LIBS)
-		target_link_libraries (libmecab LINK_PUBLIC ${Iconv_LIBRARIES})
-	else()
-		set(ADDITIONAL_LIBRARIES ${ADDITIONAL_LIBRARIES} ${Iconv_LIBRARIES})
-	endif()
-else()
-	target_include_directories(libmecab PRIVATE ./src ./)
-endif()
+target_include_directories(libmecab PRIVATE ./src ./)
 
 add_executable (mecab src/mecab.cpp)
 target_include_directories(mecab PRIVATE ./src)
