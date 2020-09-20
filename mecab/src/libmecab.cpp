@@ -8,7 +8,6 @@
 #endif
 
 #include "mecab.h"
-#include "robin_hood.h"
 #include "file.h"
 #include "tokenizer.h"
 #include "utils.h"

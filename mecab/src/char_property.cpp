@@ -11,7 +11,6 @@
 #include <array>
 #include "mecab.h"
 #include "common.h"
-#include "robin_hood.h"
 #include "file.h"
 #include "param.h"
 #include "utils.h"
@@ -94,8 +93,7 @@ bool CharProperty::open(const char *filename) {
   size_t length(0);
   CHECK_FALSE(handle_ = io_->open(filename, "r", &length, (void**)&mapped));
 
-  std::shared_ptr<IMMap> ptr;
-  ptr.reset(mapped ? new MMap((char*)mapped, length) : (IMMap*)(new FileMap(io_, handle_, length)));
+  IMMap::Ptr ptr = mapped ? IMMap::create((char*)mapped, length) : IMMap::create(io_, handle_, length);
 
   unsigned int csize;
   ptr->read(&csize, sizeof(unsigned int));

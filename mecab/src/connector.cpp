@@ -8,7 +8,6 @@
 #include <array>
 #include "mecab.h"
 #include "common.h"
-#include "robin_hood.h"
 #include "file.h"
 #include "connector.h"
 #include "param.h"
@@ -28,8 +27,7 @@ bool Connector::open(const char* filename, const char *mode) {
   size_t length(0);
   CHECK_FALSE(handle_ = io_->open(filename, mode, &length, (void**)&mapped)) << "cannot open: " << filename;
 
-  std::shared_ptr<IMMap> ptr;
-  ptr.reset(mapped ? new MMap((char*)mapped, length) : (IMMap*)(new FileMap(io_, handle_, length)));
+  IMMap::Ptr ptr = mapped ? IMMap::create((char*)mapped, length) : IMMap::create(io_, handle_, length);
 
   ptr->read(&lsize_, sizeof(unsigned short));
   ptr->read(&rsize_, sizeof(unsigned short));

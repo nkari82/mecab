@@ -7,6 +7,9 @@ cmake_host_system_information(RESULT _platform QUERY OS_PLATFORM)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+mark_as_advanced(robin_hoodINCLUDE_DIR)
+find_path(robin_hoodINCLUDE_DIR NAMES "robin_hood.h" DOC "robin_hood include directory")
+
 configure_file(src/config.h.cmake ${CMAKE_CURRENT_SOURCE_DIR}/src/config.h)
 include (CheckIncludeFiles)
 include (CheckSymbolExists)

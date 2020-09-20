@@ -8,7 +8,6 @@
 #include <array>
 #include "mecab.h"
 #include "common.h"
-#include "robin_hood.h"
 #include "file.h"
 #include "freelist.h"
 #include "learner_node.h"
@@ -87,8 +86,7 @@ bool Dictionary::open(const char *file, const char *mode) {
   CHECK_FALSE(handle_ = io_->open(file, mode, &length, (void**)&mapped)) << "no such file or directory: " << file;
   CHECK_FALSE(length >= 100) << "dictionary file is broken: " << file;
 
-  std::shared_ptr<IMMap> ptr;
-  ptr.reset(mapped ? new MMap((char*)mapped, length) : (IMMap*)(new FileMap(io_, handle_, length)));
+  IMMap::Ptr ptr = mapped ? IMMap::create((char*)mapped, length) : IMMap::create(io_, handle_, length);
   
   unsigned int dsize;
   unsigned int tsize;

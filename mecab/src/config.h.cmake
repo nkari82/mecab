@@ -29,3 +29,4 @@
 #cmakedefine HAVE_UNISTD_H								1
 #define HAVE_UNSIGNED_LONG_LONG_INT				1
 #cmakedefine HAVE_WINDOWS_H							1
+#cmakedefine HAVE_ROBIN_HOOD_H

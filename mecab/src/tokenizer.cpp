@@ -6,7 +6,6 @@
 #include <array>
 #include "mecab.h"
 #include "common.h"
-#include "robin_hood.h"
 #include "file.h"
 #include "connector.h"
 #include "darts.h"

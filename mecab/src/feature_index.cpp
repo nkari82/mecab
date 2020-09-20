@@ -10,7 +10,6 @@
 #include <array>
 #include "mecab.h"
 #include "common.h"
-#include "robin_hood.h"
 #include "file.h"
 #include "utils.h"
 #include "learner_node.h"

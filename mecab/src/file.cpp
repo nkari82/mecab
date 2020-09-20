@@ -1,7 +1,6 @@
 #include <cassert>
 #include "mecab.h"
 #include "common.h"
-#include "robin_hood.h"
 #include "file.h"
 #include "utils.h"
 
@@ -22,6 +21,16 @@
 #endif
 #endif
 
+#if defined(HAVE_ROBIN_HOOD_H)
+#include <robin_hood.h>
+template<class _Kty, class _Ty>
+using hash_map = robin_hood::unordered_map<_Kty, _Ty>;
+#else
+#include <unordered_map>
+template<class _Kty, class _Ty>
+using hash_map = std::unordered_map<_Kty, _Ty>;
+#endif
+
 namespace MeCab {
 	struct file_t
 	{
@@ -40,7 +49,7 @@ namespace MeCab {
 
 	static file_t* s_current(nullptr);
 
-	static robin_hood::unordered_map<file_handle_t, file_t> s_files;
+	static hash_map<file_handle_t, file_t> s_files;
 	static whatlog what_;
 
 	static file_handle_t open(const char *path, const char *mode, size_t* length, void **mapped)
@@ -194,6 +203,72 @@ namespace MeCab {
 		return this->gptr() == this->egptr() ? traits_type::eof() : traits_type::to_int_type(*this->gptr());
 	}
 
+	class MMap : public IMMap
+	{
+	private:
+		int relative_;
+		char* orig_;
+		size_t size_;
+
+	public:
+		MMap(void* ptr, size_t size);
+
+		char* data() override;
+		char* data(size_t size) override;
+		void read(void* val, size_t size) override;
+		void read(int offset, void** val, size_t size) override;
+		void read(int offset, char** str) override;
+		Ptr clone() override;
+
+	private:
+		char* op_index(int offset, size_t stride) override
+		{
+			return orig_ + relative_ + (offset * stride);
+		}
+
+		void op_add(int offset, size_t stride) override
+		{
+			relative_ += int(offset * stride);
+		}
+	};
+
+	class FileMap : public IMMap
+	{
+	private:
+		hash_map<size_t, char*> mmap_;
+		macab_io_file_t* io_;
+		file_handle_t handle_;
+		int relative_;
+		int orig_;
+		size_t size_;
+
+	public:
+		FileMap(macab_io_file_t* io, file_handle_t handle, size_t size, int pos = 0);
+
+		~FileMap();
+
+		char* data() override;
+		char* data(size_t size) override;
+		void read(void* val, size_t size) override;
+		void read(int offset, void** val, size_t size) override;
+		void read(int offset, char** str) override;
+		Ptr clone() override;
+
+	private:
+		char* op_index(int offset, size_t stride) override
+		{
+			char* val(nullptr);
+			read(orig_ + int(offset * stride), (void**)&val, stride);
+			return val;
+		}
+
+		void op_add(int offset, size_t stride) override
+		{
+			relative_ += int(offset * stride);
+		}
+
+	};
+
 	FileMap::FileMap(macab_io_file_t* io, file_handle_t handle, size_t size, int pos)
 		: io_(io)
 		, handle_(handle)
@@ -275,18 +350,6 @@ namespace MeCab {
 		return std::make_shared<FileMap>(io_, handle_, size_ - relative_, orig_ + relative_);
 	}
 
-	char* FileMap::op_index(int offset, size_t stride)
-	{
-		char* val(nullptr);
-		read(orig_ + int(offset * stride), (void**)&val, stride);
-		return val;
-	}
-
-	void FileMap::op_add(int offset, size_t stride)
-	{
-		relative_ += int(offset * stride);
-	}
-
 	MMap::MMap(void* ptr, size_t size) 
 		: relative_(0)
 		, orig_((char*)ptr)
@@ -332,14 +395,14 @@ namespace MeCab {
 		return std::make_shared<MMap>(orig_ + relative_, size_ - relative_);
 	}
 
-	char* MMap::op_index(int offset, size_t stride)
+	IMMap::Ptr IMMap::create(void* ptr, size_t size)
 	{
-		return orig_ + relative_ + (offset * stride);
+		return std::make_shared<MMap>(ptr, size);
 	}
 
-	void MMap::op_add(int offset, size_t stride)
+	IMMap::Ptr IMMap::create(macab_io_file_t* io, file_handle_t handle, size_t size)
 	{
-		relative_ += int(offset * stride);
+		return std::make_shared<FileMap>(io, handle, size);
 	}
 }
 
