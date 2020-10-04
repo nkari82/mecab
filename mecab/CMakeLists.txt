@@ -7,8 +7,10 @@ cmake_host_system_information(RESULT _platform QUERY OS_PLATFORM)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-mark_as_advanced(robin_hoodINCLUDE_DIR)
-find_path(robin_hoodINCLUDE_DIR NAMES "robin_hood.h" DOC "robin_hood include directory")
+
+mark_as_advanced(ROBIN_HOOD_INCLUDE_DIR)
+find_path(ROBIN_HOOD_INCLUDE_DIR NAMES "robin_hood.h" DOC "robin_hood include directory")
+find_path(ICONV_INCLUDE_DIRS NAMES iconv.h paths {proper-location})
 
 configure_file(src/config.h.cmake ${CMAKE_CURRENT_SOURCE_DIR}/src/config.h)
 include (CheckIncludeFiles)
@@ -35,6 +37,7 @@ check_include_files ( sys/times.h HAVE_SYS_TIMES_H )
 check_include_files ( sys/types.h HAVE_SYS_TYPES_H )
 check_include_files ( sys/unistd.h HAVE_UNISTD_H )
 check_include_files ( windows.h HAVE_WINDOWS_H )
+check_include_files ( ICONV_INCLUDE_DIRS HAVE_ICONV_H )
 
 check_function_exists ( getenv HAVE_GETENV )
 check_function_exists ( mmap HAVE_MMAP )
@@ -114,28 +117,28 @@ else()
 	add_library(libmecab STATIC ${SOURCES})
 endif()
 
-target_include_directories(libmecab PRIVATE ./src ./)
+target_include_directories(libmecab PRIVATE src / ${ICONV_INCLUDE_DIRS})
 
 add_executable (mecab src/mecab.cpp)
-target_include_directories(mecab PRIVATE ./src)
+target_include_directories(mecab PRIVATE src)
 target_link_libraries (mecab LINK_PUBLIC ${ADDITIONAL_LIBRARIES})
 
 add_executable (mecab-dict-index src/mecab-dict-index.cpp)
-target_include_directories(mecab-dict-index PRIVATE ./src)
+target_include_directories(mecab-dict-index PRIVATE src)
 target_link_libraries (mecab-dict-index LINK_PUBLIC ${ADDITIONAL_LIBRARIES})
 
 add_executable (mecab-dict-gen src/mecab-dict-gen.cpp)
-target_include_directories(mecab-dict-gen PRIVATE ./src)
+target_include_directories(mecab-dict-gen PRIVATE src)
 target_link_libraries (mecab-dict-gen LINK_PUBLIC ${ADDITIONAL_LIBRARIES})
 
 add_executable (mecab-cost-train src/mecab-cost-train.cpp)
-target_include_directories(mecab-cost-train PRIVATE ./src)
+target_include_directories(mecab-cost-train PRIVATE src)
 target_link_libraries (mecab-cost-train LINK_PUBLIC ${ADDITIONAL_LIBRARIES})
 
 add_executable (mecab-system-eval src/mecab-system-eval.cpp)
-target_include_directories(mecab-system-eval PRIVATE ./src)
+target_include_directories(mecab-system-eval PRIVATE src)
 target_link_libraries (mecab-system-eval LINK_PUBLIC ${ADDITIONAL_LIBRARIES})
 
 add_executable (mecab-test-gen src/mecab-dict-index.cpp)
-target_include_directories(mecab-test-gen PRIVATE ./src)
+target_include_directories(mecab-test-gen PRIVATE src)
 target_link_libraries (mecab-test-gen LINK_PUBLIC ${ADDITIONAL_LIBRARIES})
