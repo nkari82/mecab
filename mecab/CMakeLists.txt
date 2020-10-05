@@ -7,7 +7,6 @@ cmake_host_system_information(RESULT _platform QUERY OS_PLATFORM)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-
 mark_as_advanced(ROBIN_HOOD_INCLUDE_DIR)
 find_path(ROBIN_HOOD_INCLUDE_DIR NAMES "robin_hood.h" DOC "robin_hood include directory")
 find_path(ICONV_INCLUDE_DIRS NAMES iconv.h paths {proper-location})
@@ -37,7 +36,7 @@ check_include_files ( sys/times.h HAVE_SYS_TIMES_H )
 check_include_files ( sys/types.h HAVE_SYS_TYPES_H )
 check_include_files ( sys/unistd.h HAVE_UNISTD_H )
 check_include_files ( windows.h HAVE_WINDOWS_H )
-check_include_files ( ICONV_INCLUDE_DIRS HAVE_ICONV_H )
+check_include_files ( ${ICONV_INCLUDE_DIRS}/iconv.h HAVE_ICONV )
 
 check_function_exists ( getenv HAVE_GETENV )
 check_function_exists ( mmap HAVE_MMAP )
